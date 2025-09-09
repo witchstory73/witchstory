@@ -1,11 +1,1660 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>Witchstory</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>궁극의 AI 블로그 자동 포스팅</title>
+    <!-- Google Identity Services Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        .tab-button.active {
+            border-bottom-color: #3b82f6;
+            color: #3b82f6;
+        }
+        #manual-content-preview { min-height: 300px; }
+        #manual-content-preview img { max-width: 100%; height: auto; }
+        #log-container {
+            background-color: #1f2937;
+            color: #d1d5db;
+            font-family: monospace;
+            height: 300px;
+            overflow-y: auto;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+        #log-list li span.log-time { color: #6b7280; }
+        #log-list li span.log-success { color: #22c55e; }
+        #log-list li span.log-error { color: #ef4444; }
+        #log-list li span.log-warn { color: #f59e0b; }
+        #log-list li span.log-info { color: #3b82f6; }
+        .thinking::after {
+            display: inline-block;
+            animation: ellipsis 1.5s infinite;
+            content: ".";
+            width: 1em;
+            text-align: left;
+        }
+        @keyframes ellipsis {
+            0% { content: "."; }
+            33% { content: ".."; }
+            66% { content: "..."; }
+        }
+        /* 로그 애니메이션 효과 */
+        #log-list li {
+            animation: slideIn 0.3s ease-in-out;
+            margin-bottom: 4px;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        /* 진행률 바 그라데이션 효과 */
+        #progress-bar {
+            background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 50%, #3b82f6 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        #progress-bar.success {
+            background: linear-gradient(90deg, #22c55e 0%, #4ade80 50%, #22c55e 100%);
+        }
+        #progress-bar.error {
+            background: linear-gradient(90deg, #ef4444 0%, #f87171 50%, #ef4444 100%);
+        }
+        .duplicate-warning {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+        }
+    </style>
 </head>
-<body>
-  <h1>Hello Witchstory!</h1>
-  <p>이 페이지는 GitHub → Netlify 배포 테스트입니다.</p>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+    <!-- 1. 설정/로그인 화면 -->
+    <div id="settings-view" class="max-w-lg mx-auto min-h-screen flex items-center justify-center p-4">
+        <div class="w-full bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
+            <div id="settings-form">
+                <h2 class="text-2xl font-bold text-center mb-6">프로그램 설정</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="client-id-input" class="block text-sm font-medium">Google OAuth 클라이언트 ID</label>
+                        <div class="relative mt-1">
+                            <input type="password" id="client-id-input" class="block w-full px-3 py-2 border rounded-md pr-10" placeholder="....apps.googleusercontent.com">
+                            <button type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600" data-toggle-for="client-id-input">
+                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="gemini-api-key-input" class="block text-sm font-medium">Gemini API 키 (AI 텍스트 생성용)</label>
+                         <div class="relative mt-1">
+                            <input type="password" id="gemini-api-key-input" class="block w-full px-3 py-2 border rounded-md pr-10" placeholder="AIzaSy... (AI Studio에서 발급)">
+                            <button type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600" data-toggle-for="gemini-api-key-input">
+                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">이미지는 Pollinations.ai를 사용합니다 (무료, API 키 불필요)</p>
+                    </div>
+                </div>
+                <button id="save-settings-button" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                    설정 저장
+                </button>
+                 <div id="google-login-container" class="hidden mt-4">
+                    <button id="google-login-button" class="bg-white border border-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg flex items-center justify-center w-full">
+                        <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C42.021,35.596,44,30.138,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg>
+                        Google 계정으로 로그인
+                    </button>
+                </div>
+                <p id="settings-error" class="text-red-500 text-sm text-center mt-4 hidden"></p>
+                <details class="mt-6">
+                    <summary class="cursor-pointer text-center text-blue-500 hover:underline">설정 정보는 어디서 찾나요?</summary>
+                    <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm space-y-4">
+                        <div>
+                            <p><strong>Google OAuth 클라이언트 ID:</strong><br><a href="https://console.cloud.google.com/" target="_blank" class="text-blue-500">Google Cloud Console</a>에서 `Blogger API` 활성화 후, '사용자 인증 정보' > '+ 만들기' > 'OAuth 클라이언트 ID' (유형: 웹 애플리케이션)를 선택하여 생성합니다. **'승인된 자바스크립트 원본'**에 이 앱을 실행할 URL(예: `http://localhost:8080`)을 반드시 추가해야 합니다.</p>
+                        </div>
+                         <div>
+                            <p><strong>Gemini API 키:</strong><br><a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-500">Google AI Studio</a>에서 발급받습니다. 텍스트 생성에만 사용되며, 이미지는 Pollinations.ai를 통해 무료로 생성됩니다.</p>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 2. 블로그 선택 화면 -->
+    <div id="blog-selection-view" class="max-w-lg mx-auto min-h-screen p-4 hidden">
+         <header class="bg-blue-600 text-white p-4 flex items-center justify-between rounded-t-lg">
+            <h1 class="text-xl font-bold">블로그 선택</h1>
+            <button id="logout-button-selection" title="로그아웃"><i data-lucide="log-out"></i></button>
+        </header>
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-b-lg shadow-lg">
+            <p class="mb-4">포스팅할 블로그를 선택하세요.</p>
+            <div id="blog-list-loader" class="flex justify-center items-center h-32"><div class="loader"></div></div>
+            <ul id="blog-list" class="space-y-2"></ul>
+        </div>
+    </div>
+
+    <!-- 3. 포스팅 화면 -->
+    <div id="posting-view" class="max-w-lg mx-auto bg-white dark:bg-gray-800 min-h-screen shadow-lg hidden">
+        <header class="bg-blue-600 text-white p-4 flex items-center justify-between sticky top-0 z-10">
+            <h1 id="blog-title" class="text-xl font-bold truncate"></h1>
+            <button id="logout-button-main" title="로그아웃"><i data-lucide="log-out"></i></button>
+        </header>
+        
+        <div class="border-b border-gray-200 dark:border-gray-700">
+            <nav class="flex -mb-px" id="tabs">
+                <button data-tab="ai-bulk-schedule-mode" class="tab-button w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm">AI 대량 예약</button>
+                <button data-tab="ai-single-mode" class="tab-button w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm">단일 AI 포스팅</button>
+                <button data-tab="manual-mode" class="tab-button w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm">수동 포스팅</button>
+                <button data-tab="scheduled-list" class="tab-button w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm">예약된 글</button>
+            </nav>
+        </div>
+
+        <main class="p-4">
+            <!-- AI 대량 예약 모드 -->
+            <div id="ai-bulk-schedule-mode-content" class="tab-content space-y-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400">1. 핵심 키워드로 다양한 주제를 생성합니다.<br>2. 생성된 주제 중 포스팅할 주제들을 선택합니다.<br>3. 아래에서 예약 스케줄을 설정하고 작업을 시작하세요.</p>
+                <div>
+                    <label class="block text-sm font-medium mb-1">핵심 키워드</label>
+                    <div id="keyword-inputs-container" class="space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <input type="text" name="core-keywords" class="block w-full px-3 py-2 border rounded-md" placeholder="예: 김치찌개">
+                        </div>
+                    </div>
+                    <button type="button" id="add-keyword-button" class="mt-2 text-sm text-blue-600 hover:underline flex items-center">
+                        <i data-lucide="plus-circle" class="w-4 h-4 mr-1"></i>
+                        키워드 추가
+                    </button>
+                </div>
+                <button id="generate-topics-button" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                    <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>
+                    <span>주제 아이디어 생성하기</span>
+                </button>
+                <div id="topic-ideas-loader" class="flex justify-center items-center h-32 hidden"><div class="loader"></div></div>
+                <div id="topic-selection-container" class="hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold">주제 선택 (<span id="selected-topic-count">0</span>개)</h3>
+                        <button id="select-all-topics-button" class="text-sm text-blue-600 hover:underline">전체 선택</button>
+                    </div>
+                    <ul id="topic-ideas-list" class="space-y-2 max-h-60 overflow-y-auto border p-2 rounded-md"></ul>
+                </div>
+                <div id="bulk-schedule-config" class="space-y-4 pt-4 border-t hidden">
+                    <h3 class="text-lg font-semibold">예약 설정</h3>
+                    <div>
+                        <label for="schedule-times-input" class="block text-sm font-medium">반복 발행 시간 (쉼표로 구분)</label>
+                        <input type="text" id="schedule-times-input" value="09:00, 17:00, 21:00" class="mt-1 block w-full px-3 py-2 border rounded-md" placeholder="예: 09:00, 17:00, 21:00">
+                    </div>
+                    <div>
+                        <label for="schedule-days-input" class="block text-sm font-medium">예약 기간 (일)</label>
+                        <input type="number" id="schedule-days-input" value="10" min="1" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                    </div>
+                    <div>
+                        <label for="schedule-delay-input" class="block text-sm font-medium">포스트 간 대기 시간 (분)</label>
+                        <input type="number" id="schedule-delay-input" value="5" min="1" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="generate-image-checkbox-bulk" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                        <label for="generate-image-checkbox-bulk" class="ml-2 block text-sm font-medium">AI로 이미지 생성하기 (Pollinations.ai 무료)</label>
+                    </div>
+                    <button id="start-bulk-schedule-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                        <i data-lucide="calendar-check" class="w-4 h-4 mr-2"></i>
+                        <span>대량 예약 작업 시작</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 단일 AI 포스팅 모드 -->
+            <div id="ai-single-mode-content" class="tab-content space-y-4 hidden">
+                <div>
+                    <label for="post-topic-input" class="block text-sm font-medium">글 주제 / 키워드</label>
+                    <input type="text" id="post-topic-input" class="mt-1 block w-full px-3 py-2 border rounded-md" placeholder="AI가 작성할 글의 주제를 입력하세요.">
+                </div>
+                 <div>
+                    <label for="writing-instructions-input" class="block text-sm font-medium">글쓰기 지침 (AI 글 생성 가이드)</label>
+                    <textarea id="writing-instructions-input" rows="10" class="mt-1 block w-full px-3 py-2 border rounded-md"></textarea>
+                    <button id="save-instructions-button" class="mt-2 w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg text-sm">
+                        이 지침을 기본값으로 저장
+                    </button>
+                </div>
+                <div>
+                    <label for="ai-publish-time-input" class="block text-sm font-medium">예약 발행 시간</label>
+                    <input type="datetime-local" id="ai-publish-time-input" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="generate-image-checkbox-single" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                    <label for="generate-image-checkbox-single" class="ml-2 block text-sm font-medium">AI로 이미지 생성하기 (Pollinations.ai 무료)</label>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="ai-publish-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                        <span id="ai-publish-button-text">AI로 포스팅 실행</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 수동 모드 -->
+            <div id="manual-mode-content" class="tab-content space-y-4 hidden">
+                 <div>
+                    <label for="manual-title-input" class="block text-sm font-medium">제목</label>
+                    <input type="text" id="manual-title-input" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center">
+                        <label for="manual-content-input" class="block text-sm font-medium">본문 (HTML)</label>
+                        <div>
+                            <button id="manual-preview-button" class="text-sm text-blue-600 hover:underline">미리보기</button>
+                            <button id="manual-code-view-button" class="text-sm text-blue-600 hover:underline hidden">코드 보기</button>
+                        </div>
+                    </div>
+                    <textarea id="manual-content-input" rows="15" class="mt-1 block w-full px-3 py-2 border rounded-md font-mono text-sm"></textarea>
+                    <div id="manual-content-preview" class="mt-1 p-3 border rounded-md hidden prose dark:prose-invert max-w-none"></div>
+                </div>
+                 <div>
+                    <label for="manual-labels-input" class="block text-sm font-medium">라벨/태그 (쉼표로 구분)</label>
+                    <input type="text" id="manual-labels-input" class="mt-1 block w-full px-3 py-2 border rounded-md" placeholder="예: 요리, 레시피, 한식">
+                    <p class="text-xs text-gray-500 mt-1">블로그 SEO를 위한 라벨/태그를 입력하세요 (각 라벨 최대 20자, 전체 최대 150자)</p>
+                </div>
+                <div>
+                    <label for="manual-publish-time-input" class="block text-sm font-medium">예약 발행 시간</label>
+                    <input type="datetime-local" id="manual-publish-time-input" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                </div>
+                <div class="flex space-x-2">
+                    <button id="manual-publish-button" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">수동으로 발행</button>
+                    <button id="manual-reset-button" class="w-1/3 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">초기화</button>
+                </div>
+            </div>
+
+            <!-- 예약된 글 목록 -->
+            <div id="scheduled-list-content" class="tab-content hidden">
+                <h3 id="scheduled-list-title" class="text-lg font-semibold mb-4">예약된 글 목록</h3>
+                <div id="scheduled-loader" class="flex justify-center items-center h-32"><div class="loader"></div></div>
+                <ul id="scheduled-list-ul" class="space-y-3"></ul>
+            </div>
+            
+            <!-- 공통 UI 요소: 로그 컨테이너 -->
+            <div id="progress-container" class="mt-4 hidden">
+                <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 mb-3">
+                    <div id="current-status" class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">준비 중...</div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-600">
+                        <div id="progress-bar" class="h-3 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                    </div>
+                    <div id="timer-container" class="text-center text-xs text-gray-500 mt-2"></div>
+                </div>
+                <div id="log-container">
+                    <ul id="log-list"></ul>
+                </div>
+            </div>
+            <div class="flex space-x-2 mt-4">
+                 <button id="stop-button" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg hidden">
+                    AI 작업 중지
+                </button>
+            </div>
+            <div id="status-message" class="mt-4 p-4 rounded-md text-center hidden"></div>
+        </main>
+    </div>
+
+    <script>
+        let CLIENT_ID = null;
+        let GEMINI_API_KEY = null;
+        let WRITING_INSTRUCTIONS = null;
+        let accessToken = null;
+        let selectedBlogId = null;
+        let tokenClient;
+        let isProcessRunning = false;
+        let timerInterval = null;
+        let progressAnimationInterval = null;
+        let bulkScheduleQueue = [];
+        let globalStartTime = null;
+        let scheduledPostTitles = new Set(); // 예약된 글 제목들을 저장
+
+        // DOM 요소
+        const settingsView = document.getElementById('settings-view');
+        const postingView = document.getElementById('posting-view');
+        const blogSelectionView = document.getElementById('blog-selection-view');
+        const clientIdInput = document.getElementById('client-id-input');
+        const geminiApiKeyInput = document.getElementById('gemini-api-key-input');
+        const saveSettingsButton = document.getElementById('save-settings-button');
+        const settingsErrorEl = document.getElementById('settings-error');
+        const googleLoginContainer = document.getElementById('google-login-container');
+        const googleLoginButton = document.getElementById('google-login-button');
+        
+        const blogTitleEl = document.getElementById('blog-title');
+        const logoutButtonSelection = document.getElementById('logout-button-selection');
+        const logoutButtonMain = document.getElementById('logout-button-main');
+        const blogListLoader = document.getElementById('blog-list-loader');
+        const blogList = document.getElementById('blog-list');
+
+        const tabs = document.getElementById('tabs');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        const keywordInputsContainer = document.getElementById('keyword-inputs-container');
+        const addKeywordButton = document.getElementById('add-keyword-button');
+        const generateTopicsButton = document.getElementById('generate-topics-button');
+        const topicIdeasLoader = document.getElementById('topic-ideas-loader');
+        const topicSelectionContainer = document.getElementById('topic-selection-container');
+        const topicIdeasList = document.getElementById('topic-ideas-list');
+        const selectedTopicCountEl = document.getElementById('selected-topic-count');
+        const selectAllTopicsButton = document.getElementById('select-all-topics-button');
+        const bulkScheduleConfig = document.getElementById('bulk-schedule-config');
+        const scheduleTimesInput = document.getElementById('schedule-times-input');
+        const scheduleDaysInput = document.getElementById('schedule-days-input');
+        const scheduleDelayInput = document.getElementById('schedule-delay-input');
+        const startBulkScheduleButton = document.getElementById('start-bulk-schedule-button');
+        const generateImageCheckboxBulk = document.getElementById('generate-image-checkbox-bulk');
+
+        const postTopicInput = document.getElementById('post-topic-input');
+        const writingInstructionsInput = document.getElementById('writing-instructions-input');
+        const saveInstructionsButton = document.getElementById('save-instructions-button');
+        const aiPublishTimeInput = document.getElementById('ai-publish-time-input');
+        const aiPublishButton = document.getElementById('ai-publish-button');
+        const generateImageCheckboxSingle = document.getElementById('generate-image-checkbox-single');
+        
+        const manualTitleInput = document.getElementById('manual-title-input');
+        const manualContentInput = document.getElementById('manual-content-input');
+        const manualContentPreview = document.getElementById('manual-content-preview');
+        const manualPreviewButton = document.getElementById('manual-preview-button');
+        const manualCodeViewButton = document.getElementById('manual-code-view-button');
+        const manualLabelsInput = document.getElementById('manual-labels-input');
+        const manualPublishTimeInput = document.getElementById('manual-publish-time-input');
+        const manualPublishButton = document.getElementById('manual-publish-button');
+        const manualResetButton = document.getElementById('manual-reset-button');
+        const scheduledLoader = document.getElementById('scheduled-loader');
+        const scheduledListUl = document.getElementById('scheduled-list-ul');
+        const stopButton = document.getElementById('stop-button');
+        const statusMessageEl = document.getElementById('status-message');
+        const progressContainer = document.getElementById('progress-container');
+        const logContainer = document.getElementById('log-container');
+        const logList = document.getElementById('log-list');
+        const progressBar = document.getElementById('progress-bar');
+        const timerContainer = document.getElementById('timer-container');
+        const currentStatusEl = document.getElementById('current-status');
+        
+        const defaultInstructions = `반드시 html 코드만 제공한다. 절대 h1 태그는 사용하지 않는다.
+
+구글/네이버 알고리즘 최적화 HTML 코드로만 글 작성
+
+중복(단어,문장 반복금지) - 목차나 섹션이 2번 나오면 안됨
+
+1. 목차 (TOC) - 단 1번만, 문서 최상단에
+<!-- 📋 목차: 동적 스타일 적용 -->
+<div class="toc-container">
+    <h2 class="toc-title">📋 목차</h2>
+    <ul>
+        <li><a href="#smart_homecooking">💰 집밥, 외식비 절약의 비결</a></li>
+        <li><a href="#budget_grocery">🛒 만원으로 즐기는 알찬 장보기 팁</a></li>
+        <li><a href="#easy_recipes">🍳 초간단! 가성비 집요리 레시피 3가지</a></li>
+        <li><a href="#ingredient_reuse">✨ 남은 재료 200% 활용 노하우</a></li>
+        <li><a href="#health_benefits">💪 집밥의 숨겨진 건강 효능</a></li>
+        <li><a href="#enjoy_homecooking">🎉 외식 대신 집밥! 즐거움을 더하는 방법</a></li>
+        <li><a href="#faq_section">❓ 자주 묻는 질문 (FAQ)</a></li>
+    </ul>
+</div>
+<style>
+    /* 📌 제목 스타일 */
+    .toc-title {
+        font-size: 22px;
+        font-weight: bold;
+        text-align: center;
+        color: #000;
+        display: block;
+        margin-bottom: 10px;
+    }
+    /* 📌 목차 컨테이너 */
+    .toc-container {
+        background-color: #F8E8EE;
+        padding: 15px;
+        border-radius: 8px;
+        border: 2px solid #000;
+        max-width: 85%;
+        margin: 20px auto;
+        box-shadow: 0 0 15px rgba(255, 105, 180, 0.8);
+        animation: fast-glow 0.7s infinite alternate, shake 3s infinite ease-in-out, float 2s infinite ease-in-out;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    /* 🖱️ 마우스 오버 시 확대 효과 */
+    .toc-container:hover {
+        transform: scale(1.05);
+    }
+    .toc-container ul {
+        list-style: none;
+        padding-left: 0;
+    }
+    .toc-container li {
+        margin-bottom: 8px;
+        padding: 6px;
+    }
+    .toc-container li a {
+        text-decoration: none !important;
+        font-weight: bold;
+        color: #000 !important;
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+    }
+    .toc-container li a:hover {
+        background-color: transparent !important;
+        color: #000 !important;
+    }
+    /* ✨ 네온 테두리 효과 */
+    @keyframes fast-glow {
+        0% { box-shadow: 0 0 10px rgba(255, 105, 180, 0.8); border-color: rgba(255, 105, 180, 1); }
+        100% { box-shadow: 0 0 20px rgba(255, 105, 180, 1.0); border-color: rgba(255, 105, 180, 0.8); }
+    }
+    @keyframes shake {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(-2px); }
+        50% { transform: translateX(2px); }
+        75% { transform: translateX(-2px); }
+        100% { transform: translateX(0); }
+    }
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+        100% { transform: translateY(0px); }
+    }
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
+        .toc-container {
+            max-width: 95%;
+            padding: 10px;
+        }
+        .toc-title {
+            font-size: 20px;
+        }
+        .toc-container li a {
+            font-size: 13px;
+        }
+    }
+</style>
+2. 인트로 출력 - 목차 바로 다음
+<p data-ke-size="size16">도입부 내용... 주제에 대한 흥미로운 소개와 독자의 관심을 끄는 내용</p>
+<p data-ke-size="size16">&nbsp;</p>
+
+3. 섹션 제목(h2) - 목차와 완전히 일치
+<h2 id="section1" style="color: #000000; font-size: 20px; font-weight: bold; background-color: #FFD8A8; padding: 10px; border-radius: 5px;" data-ke-size="size26">🍎 첫번째 섹션 제목</h2>
+
+4. 문단 구조
+각 섹션 1,500자 이상 문단 작성
+글자수 최대 10000자 구체적사례, 실질적 정보, 예시, 역사적/문화적 배경 포함
+문단 간 4문장마다 줄 간격 추가
+<p data-ke-size="size16">&nbsp;</p>
+각 섹션마다 h3 표 1개씩 포함
+
+<h3>🍏 비교표 제목</h3>
+<table style="width: 100%; border-collapse: collapse; text-align: center; border: 2px solid #000;">
+<tr style="background-color:#a7eecf; color: #000000;">
+<th style="padding: 10px; border: 1px solid #000; color: #000000;">항목1</th>
+<th style="padding: 10px; border: 1px solid #000; color: #000000;">항목2</th>
+</tr>
+<tr style="background-color: #e0f8e8;">
+<td style="padding: 10px; border: 1px solid #000; color: #000000;">내용1</td>
+<td style="padding: 10px; border: 1px solid #000; color: #000000;">내용2</td>
+</tr>
+</table>
+
+5. FAQ 섹션 - 30개 질문과 답변
+<h2 id="faq" style="color: #000000; font-size: 20px; font-weight: bold; background-color: #FFD8A8; padding: 10px; border-radius: 5px;" data-ke-size="size26">❓ FAQ</h2>
+<p data-ke-size="size16"><strong>Q1. 질문 내용?</strong></p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">A1. 답변 내용...</p>
+<p data-ke-size="size16">&nbsp;</p>
+
+중요 규칙:
+- h1 태그 절대 사용 금지 (제목은 블로거가 자동 처리)
+- 절대 ** 또는 * 사용 금지
+- 목차는 문서에 단 1번만 나옴
+- 목차는 반드시 네온 그라데이션 스타일 포함
+- 각 섹션은 1번씩만 출력
+- 중복 내용 없이 각 섹션 독립적으로 작성
+- "합니다", "입니다" 대신 "해요", "이에요" 사용
+- 글자수 10000자 이상 충실히 작성
+- HTML 코드만 제공, 주석이나 설명 없음
+- 표 글자는 반드시 검정색(#000000)으로 가독성 확보`;
+
+        // --- 초기화 및 뷰 관리 ---
+        window.onload = () => {
+            loadSettings();
+            if (CLIENT_ID && GEMINI_API_KEY) {
+                googleLoginContainer.classList.remove('hidden');
+                initializeGsi();
+            }
+            lucide.createIcons();
+            saveSettingsButton.addEventListener('click', handleSaveSettings);
+            googleLoginButton.addEventListener('click', () => tokenClient.requestAccessToken());
+            logoutButtonSelection.addEventListener('click', handleLogout);
+            logoutButtonMain.addEventListener('click', handleLogout);
+            generateTopicsButton.addEventListener('click', handleGenerateTopics);
+            selectAllTopicsButton.addEventListener('click', handleSelectAllTopics);
+            startBulkScheduleButton.addEventListener('click', handleBulkSchedule);
+            addKeywordButton.addEventListener('click', addKeywordInput);
+            aiPublishButton.addEventListener('click', handleAIPublishPost);
+            saveInstructionsButton.addEventListener('click', handleSaveInstructions);
+            manualPublishButton.addEventListener('click', handleManualPublishPost);
+            manualPreviewButton.addEventListener('click', showManualPreview);
+            manualCodeViewButton.addEventListener('click', showManualCodeView);
+            manualResetButton.addEventListener('click', handleManualReset);
+            stopButton.addEventListener('click', handleStopProcess);
+            tabs.addEventListener('click', handleTabClick);
+            topicIdeasList.addEventListener('change', updateSelectedTopicCount);
+
+            // 입력 값 보기/숨기기 토글 기능 추가
+            document.querySelectorAll('[data-toggle-for]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const inputId = button.dataset.toggleFor;
+                    const input = document.getElementById(inputId);
+                    const icon = button.querySelector('i');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.setAttribute('data-lucide', 'eye-off');
+                    } else {
+                        input.type = 'password';
+                        icon.setAttribute('data-lucide', 'eye');
+                    }
+                    lucide.createIcons();
+                });
+            });
+        };
+
+        function showView(viewName) {
+            settingsView.style.display = 'none';
+            blogSelectionView.style.display = 'none';
+            postingView.style.display = 'none';
+            if (viewName === 'settings') settingsView.style.display = 'flex';
+            if (viewName === 'blog-selection') blogSelectionView.style.display = 'block';
+            if (viewName === 'posting') postingView.style.display = 'block';
+        }
+
+        function handleTabClick(e) {
+            const targetTab = e.target.closest('.tab-button');
+            if (!targetTab) return;
+
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            targetTab.classList.add('active');
+            
+            tabContents.forEach(content => content.style.display = 'none');
+            const activeContent = document.getElementById(`${targetTab.dataset.tab}-content`);
+            if (activeContent) activeContent.style.display = 'block';
+
+            if (targetTab.dataset.tab === 'scheduled-list') {
+                fetchScheduledPosts();
+            }
+        }
+
+        // --- 설정 및 인증 ---
+        function loadSettings() {
+            CLIENT_ID = localStorage.getItem('bloggerClientId');
+            GEMINI_API_KEY = localStorage.getItem('geminiApiKey');
+            clientIdInput.value = CLIENT_ID || '';
+            geminiApiKeyInput.value = GEMINI_API_KEY || '';
+        }
+
+        async function handleSaveSettings() {
+            const clientId = clientIdInput.value.trim();
+            const geminiApiKey = geminiApiKeyInput.value.trim();
+
+            if (!clientId || !geminiApiKey) {
+                settingsErrorEl.textContent = '모든 필드를 입력해주세요.';
+                settingsErrorEl.classList.remove('hidden');
+                return;
+            }
+
+            localStorage.setItem('bloggerClientId', clientId);
+            localStorage.setItem('geminiApiKey', geminiApiKey);
+            loadSettings();
+            settingsErrorEl.classList.add('hidden');
+            googleLoginContainer.classList.remove('hidden');
+            initializeGsi();
+        }
+        
+        function initializeGsi() {
+            if(!CLIENT_ID) return;
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/blogger',
+                callback: handleTokenResponse,
+            });
+        }
+        
+        function handleTokenResponse(response) {
+            if (response.error) {
+                showStatusMessage('인증에 실패했습니다: ' + response.error, 'error');
+                return;
+            }
+            accessToken = response.access_token;
+            showView('blog-selection');
+            fetchUserBlogs();
+        }
+        
+        function handleLogout() {
+            if (accessToken) {
+                google.accounts.oauth2.revoke(accessToken, () => {
+                    accessToken = null;
+                    selectedBlogId = null;
+                    showView('settings');
+                });
+            }
+        }
+
+        // --- API 호출 (Blogger) ---
+        async function fetchWithAuth(url, options = {}) {
+            if (!accessToken) throw new Error('인증 토큰이 없습니다.');
+            const headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            };
+            const response = await fetch(url, { ...options, headers });
+            if (response.status === 401) {
+                handleLogout();
+                throw new Error('인증이 만료되었습니다.');
+            }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error.message || `HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        }
+
+        async function fetchUserBlogs() {
+            blogListLoader.style.display = 'flex';
+            blogList.innerHTML = '';
+            try {
+                const data = await fetchWithAuth('https://www.googleapis.com/blogger/v3/users/self/blogs');
+                renderBlogList(data.items || []);
+            } catch (error) {
+                showStatusMessage(`블로그 목록 로드 실패: ${error.message}`, 'error');
+                settingsErrorEl.textContent = `블로그 목록 로드 실패: ${error.message}`;
+                settingsErrorEl.classList.remove('hidden');
+                showView('settings');
+            } finally {
+                blogListLoader.style.display = 'none';
+            }
+        }
+
+        function renderBlogList(blogs) {
+            if (blogs.length === 0) {
+                blogList.innerHTML = '<li>소유한 블로그가 없습니다.</li>';
+                return;
+            }
+            blogList.innerHTML = blogs.map(blog => `
+                <li class="p-3 bg-gray-50 dark:bg-gray-700 rounded-md cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900" onclick="selectBlog('${blog.id}', '${blog.name.replace(/'/g, "\\'")}')">
+                    <h3 class="font-bold">${blog.name}</h3>
+                </li>
+            `).join('');
+        }
+
+        function selectBlog(blogId, blogName) {
+            selectedBlogId = blogId;
+            blogTitleEl.textContent = blogName;
+            WRITING_INSTRUCTIONS = localStorage.getItem(`bloggerInstructions_${selectedBlogId}`) || defaultInstructions;
+            writingInstructionsInput.value = WRITING_INSTRUCTIONS;
+            showView('posting');
+            handleTabClick({ target: document.querySelector('[data-tab="ai-bulk-schedule-mode"]') });
+        }
+        
+        function handleSaveInstructions() {
+            const newInstructions = writingInstructionsInput.value.trim();
+            if (!newInstructions) {
+                showStatusMessage('지침 내용이 비어있습니다.', 'error');
+                return;
+            }
+            localStorage.setItem(`bloggerInstructions_${selectedBlogId}`, newInstructions);
+            WRITING_INSTRUCTIONS = newInstructions;
+            showStatusMessage('글쓰기 지침이 현재 블로그의 기본값으로 저장되었습니다.', 'success');
+        }
+
+        // --- 예약된 글 제목 가져오기 (중복 체크용) ---
+        async function fetchScheduledPostTitles() {
+            try {
+                const data = await fetchWithAuth(
+                    `https://www.googleapis.com/blogger/v3/blogs/${selectedBlogId}/posts?status=SCHEDULED&maxResults=500&fields=items(title)`
+                );
+                scheduledPostTitles = new Set((data.items || []).map(post => post.title.toLowerCase()));
+                return scheduledPostTitles;
+            } catch (error) {
+                console.error('예약된 글 목록 가져오기 실패:', error);
+                return new Set();
+            }
+        }
+
+        // --- 라벨 처리 함수 (150자 제한) ---
+        function processLabels(labels) {
+            if (!labels || labels.length === 0) return [];
+            
+            // 각 라벨을 20자로 제한
+            let processedLabels = labels.map(label => {
+                const trimmed = label.trim();
+                return trimmed.length > 20 ? trimmed.substring(0, 20) : trimmed;
+            });
+            
+            // 전체 라벨 문자열이 150자를 넘지 않도록 조정
+            let totalLength = processedLabels.join(',').length;
+            while (totalLength > 150 && processedLabels.length > 1) {
+                processedLabels.pop(); // 마지막 라벨부터 제거
+                totalLength = processedLabels.join(',').length;
+            }
+            
+            // 그래도 150자를 넘으면 첫 번째 라벨만 잘라서 사용
+            if (totalLength > 150 && processedLabels.length === 1) {
+                const maxLength = 150;
+                processedLabels[0] = processedLabels[0].substring(0, maxLength);
+            }
+            
+            return processedLabels;
+        }
+
+        // --- Pollinations.ai 이미지 생성 (한글 프롬프트를 영어로 번역) ---
+        async function translateToEnglish(koreanText) {
+            try {
+                // Gemini를 사용하여 한글을 영어로 번역
+                const translatePrompt = `Translate the following Korean text to English for image generation. Provide only the English translation without any explanation:
+                "${koreanText}"`;
+                
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
+                const payload = { contents: [{ parts: [{ text: translatePrompt }] }] };
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Translation failed');
+                }
+                
+                const result = await response.json();
+                const englishText = result.candidates[0].content.parts[0].text.trim();
+                console.log(`번역: "${koreanText}" → "${englishText}"`);
+                return englishText;
+            } catch (error) {
+                console.error('번역 실패:', error);
+                // 번역 실패 시 기본 영어 프롬프트 반환
+                return 'blog post image';
+            }
+        }
+
+        async function generatePollinationsImage(prompt) {
+            try {
+                // 한글인지 확인 (한글이 포함되어 있으면 번역)
+                const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(prompt);
+                let englishPrompt = prompt;
+                
+                if (hasKorean) {
+                    addLog('🔤 한글 프롬프트를 영어로 번역 중...', 'info');
+                    englishPrompt = await translateToEnglish(prompt);
+                }
+                
+                // 프롬프트 개선 (영어로)
+                const enhancedPrompt = `${englishPrompt}, professional photography, high quality, detailed, 8k resolution, beautiful lighting, vibrant colors`;
+                
+                // URL 인코딩
+                const encodedPrompt = encodeURIComponent(enhancedPrompt);
+                
+                // 고유 seed로 매번 다른 이미지
+                const seed = Date.now() + Math.floor(Math.random() * 10000);
+                
+                // Pollinations URL 생성
+                const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1200&height=800&nologo=true&seed=${seed}`;
+                
+                console.log('Pollinations 이미지 URL:', imageUrl);
+                addLog('✅ Pollinations AI 이미지 생성 완료', 'success');
+                
+                return imageUrl;
+            } catch (error) {
+                console.error('Pollinations 이미지 생성 실패:', error);
+                addLog('⚠️ 이미지 생성 실패, 기본 이미지 사용', 'warn');
+                
+                // 폴백 이미지
+                const fallbackSeed = Date.now();
+                return `https://image.pollinations.ai/prompt/beautiful%20blog%20image?width=1200&height=800&nologo=true&seed=${fallbackSeed}`;
+            }
+        }
+
+        // --- Gemini API 호출 ---
+        function cleanHtml(rawHtml) {
+            const bodyMatch = rawHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+            let cleanedContent;
+            if (bodyMatch && bodyMatch[1]) {
+                cleanedContent = bodyMatch[1].trim();
+            } else {
+                cleanedContent = rawHtml
+                    .replace(/<!DOCTYPE html>/i, '')
+                    .replace(/<html[^>]*>/i, '')
+                    .replace(/<\/html>/i, '')
+                    .replace(/<head[^>]*>[\s\S]*<\/head>/i, '')
+                    .replace(/```html/g, '')
+                    .replace(/```/g, '')
+                    .trim();
+            }
+            
+            // h1 태그 제거 (제목 중복 방지)
+            cleanedContent = cleanedContent.replace(/<h1[^>]*>.*?<\/h1>/gi, '');
+            
+            // 태그 관련 내용 제거
+            cleanedContent = cleanedContent.replace(/<(div|p|section|aside)[^>]*>\s*(태그|관련 태그|TAGS)\s*:[\s\S]*?<\/\1>/gi, '');
+            cleanedContent = cleanedContent.replace(/^\s*(태그|관련 태그|TAGS)\s*:.*$/gim, '');
+            
+            // 첫 번째 h2/h3 제거 (있을 경우)
+            cleanedContent = cleanedContent.replace(/^<h[2-3]>.+?<\/[hH][2-3]>/, '').trim();
+
+            return cleanedContent.trim();
+        }
+
+        async function apiFetchWithRetry(url, payload) {
+            const maxRetries = 3;
+            let delay = 2000;
+
+            for (let i = 0; i < maxRetries; i++) {
+                 if (!isProcessRunning) throw new Error('작업 중지됨');
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        const errorMessage = errorData.error?.message || `HTTP error! status: ${response.status}`;
+                         if (response.status === 429 || response.status === 503 || errorMessage.toLowerCase().includes('overloaded') || errorMessage.toLowerCase().includes('internal error')) {
+                            throw new Error(`RETRYABLE: ${errorMessage}`);
+                        }
+                        throw new Error(`API 요청 실패: ${errorMessage}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    if (error.message.startsWith('RETRYABLE') && i < maxRetries - 1) {
+                        addLog(`API 서버 오류 감지. ${delay / 1000}초 후 재시도... (${i + 1}/${maxRetries})`, 'warn');
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                    } else {
+                        const finalError = error.message.replace('RETRYABLE: ', '');
+                        throw new Error(finalError);
+                    }
+                }
+            }
+        }
+
+        async function geminiFetch(model, prompt) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            const result = await apiFetchWithRetry(apiUrl, payload);
+            if (!result.candidates || !result.candidates[0].content.parts[0].text) {
+                throw new Error("API로부터 유효한 텍스트 응답을 받지 못했습니다.");
+            }
+            const rawText = result.candidates[0].content.parts[0].text;
+            if (!prompt.includes("태그(라벨)를 콤마(,)로 구분하여")) {
+                 return cleanHtml(rawText);
+            }
+            return rawText.trim();
+        }
+
+        // --- AI 주제 생성 & 대량 예약 ---
+        function addKeywordInput() {
+            const newRow = document.createElement('div');
+            newRow.className = 'flex items-center space-x-2';
+
+            const newInput = document.createElement('input');
+            newInput.type = 'text';
+            newInput.name = 'core-keywords';
+            newInput.className = 'block w-full px-3 py-2 border rounded-md';
+            newInput.placeholder = '예: 된장찌개';
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'text-red-500 hover:text-red-700 p-1';
+            removeButton.innerHTML = '<i data-lucide="minus-circle" class="w-5 h-5"></i>';
+            removeButton.onclick = () => {
+                newRow.remove();
+            };
+
+            newRow.appendChild(newInput);
+            newRow.appendChild(removeButton);
+            keywordInputsContainer.appendChild(newRow);
+            lucide.createIcons();
+        }
+
+        async function handleGenerateTopics() {
+            const keywordInputs = document.querySelectorAll('#keyword-inputs-container input[name="core-keywords"]');
+            const keywords = Array.from(keywordInputs).map(input => input.value.trim()).filter(Boolean);
+
+            if (keywords.length === 0) {
+                showStatusMessage('하나 이상의 핵심 키워드를 입력해주세요.', 'error');
+                return;
+            }
+            
+            topicIdeasLoader.classList.remove('hidden');
+            topicSelectionContainer.classList.add('hidden');
+            topicIdeasList.innerHTML = '';
+            isProcessRunning = true;
+            generateTopicsButton.disabled = true;
+            initLog();
+            progressContainer.classList.remove('hidden');
+
+            try {
+                addLog(`${keywords.length}개의 키워드에 대한 주제 생성을 시작합니다.`);
+                let allTopics = [];
+                for (let i = 0; i < keywords.length; i++) {
+                    const keyword = keywords[i];
+                    if (!isProcessRunning) throw new Error('작업 중지됨');
+                    updateProgress((i / keywords.length) * 100, `"${keyword}" 키워드로 주제 생성 중...`);
+                    const prompt = `당신은 SEO 전문가이자 콘텐츠 전략가입니다. 핵심 키워드 "${keyword}"(을)를 바탕으로, 구글 검색에 최적화되고 사용자의 흥미를 끌 만한 블로그 글 주제 10~15가지를 생성해주세요. 각 주제는 이전 주제와 중복되지 않아야 하며, 구체적이고 매력적이어야 합니다. **매우 중요: 서론이나 번호 없이, 오직 각 주제를 줄바꿈으로 구분한 목록만 제공해주세요.**`;
+                    const topicsText = await geminiFetch('gemini-2.5-flash-preview-05-20', prompt);
+                    const topics = topicsText.split('\n').filter(t => {
+                        const trimmed = t.trim();
+                        if (trimmed === '') return false;
+                        if (trimmed.includes('다음은') || trimmed.includes('주제 목록입니다') || trimmed.includes('생성해')) {
+                            return false;
+                        }
+                        return true;
+                    }).map(t => t.replace(/^\d+\.\s*/, '').trim());
+                    allTopics.push(...topics);
+                }
+
+                const uniqueTopics = [...new Set(allTopics)];
+                
+                renderTopicIdeas(uniqueTopics);
+                topicSelectionContainer.classList.remove('hidden');
+                bulkScheduleConfig.classList.remove('hidden');
+                updateProgress(100, `총 ${uniqueTopics.length}개의 고유한 주제를 생성했습니다.`);
+
+            } catch (error) {
+                showStatusMessage(`주제 생성 실패: ${error.message}`, 'error');
+                addLog(`주제 생성 실패: ${error.message}`, 'error');
+            } finally {
+                topicIdeasLoader.classList.add('hidden');
+                isProcessRunning = false;
+                generateTopicsButton.disabled = false;
+            }
+        }
+
+        function renderTopicIdeas(topics) {
+            topicIdeasList.innerHTML = topics.map((topic, index) => `
+                <li class="p-2 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
+                    <div class="flex items-center flex-grow mr-2">
+                        <input type="checkbox" id="topic-${index}" value="${topic}" class="mr-3 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <label for="topic-${index}" class="text-sm w-full cursor-pointer">${topic}</label>
+                    </div>
+                    <button onclick="selectTopicForSinglePosting('${topic.replace(/'/g, "\\'")}')" class="p-1 text-gray-500 hover:text-blue-600 flex-shrink-0" title="이 주제로 단일 포스팅하기">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </li>
+            `).join('');
+            updateSelectedTopicCount();
+            lucide.createIcons();
+        }
+
+        function selectTopicForSinglePosting(topic) {
+            postTopicInput.value = topic;
+            handleTabClick({ target: document.querySelector('[data-tab="ai-single-mode"]') });
+            postingView.scrollTop = 0;
+        }
+        
+        function updateSelectedTopicCount() {
+            const selectedCount = topicIdeasList.querySelectorAll('input[type="checkbox"]:checked').length;
+            selectedTopicCountEl.textContent = selectedCount;
+        }
+
+        function handleSelectAllTopics() {
+            const checkboxes = topicIdeasList.querySelectorAll('input[type="checkbox"]');
+            const allSelected = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allSelected);
+            updateSelectedTopicCount();
+        }
+
+        // --- 예약 포스트 관리 ---
+        async function fetchScheduledPosts() {
+            scheduledLoader.style.display = 'flex';
+            scheduledListUl.innerHTML = '';
+            document.getElementById('scheduled-list-title').textContent = '예약된 글 목록';
+            try {
+                const data = await fetchWithAuth(`https://www.googleapis.com/blogger/v3/blogs/${selectedBlogId}/posts?status=SCHEDULED&orderBy=published&maxResults=100`);
+                renderScheduledPosts(data.items || []);
+            } catch (error) {
+                scheduledListUl.innerHTML = `<li class="text-red-500">${error.message}</li>`;
+            } finally {
+                scheduledLoader.style.display = 'none';
+            }
+        }
+
+        function renderScheduledPosts(posts) {
+            const titleEl = document.getElementById('scheduled-list-title');
+            titleEl.textContent = `예약된 글 목록 (${posts.length}개)`;
+
+            // 제목 중복 체크
+            const titleCounts = {};
+            posts.forEach(post => {
+                const title = post.title.toLowerCase();
+                titleCounts[title] = (titleCounts[title] || 0) + 1;
+            });
+
+            if (posts.length === 0) {
+                scheduledListUl.innerHTML = '<li>예약된 글이 없습니다.</li>';
+                return;
+            }
+            
+            scheduledListUl.innerHTML = posts.map(post => {
+                const isDuplicate = titleCounts[post.title.toLowerCase()] > 1;
+                return `
+                    <li class="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center ${isDuplicate ? 'border-2 border-yellow-400' : ''}">
+                        <div>
+                            <p class="font-semibold">${post.title} ${isDuplicate ? '<span class="text-yellow-600 text-xs ml-2">(중복)</span>' : ''}</p>
+                            <p class="text-sm text-gray-500">${new Date(post.published).toLocaleString()} 발행 예정</p>
+                        </div>
+                        <button onclick="handleCancelSchedule('${post.id}')" class="bg-red-500 text-white px-3 py-1 text-sm rounded-md hover:bg-red-600">예약 취소</button>
+                    </li>
+                `;
+            }).join('');
+        }
+        
+        async function handleCancelSchedule(postId) {
+            if (!confirm('이 글의 예약을 취소하고 초안으로 되돌리시겠습니까?')) return;
+            try {
+                await fetchWithAuth(`https://www.googleapis.com/blogger/v3/blogs/${selectedBlogId}/posts/${postId}/revert`, { method: 'POST' });
+                showStatusMessage('예약이 성공적으로 취소되었습니다.', 'success');
+                fetchScheduledPosts();
+            } catch (error) {
+                showStatusMessage(error.message, 'error');
+            }
+        }
+
+        // --- 포스팅 로직 (단일, 수동) ---
+        function handleStopProcess() {
+            isProcessRunning = false;
+            bulkScheduleQueue = [];
+            addLog('사용자에 의해 작업이 중지 요청되었습니다.', 'warn');
+        }
+        
+        function showManualPreview() {
+            manualContentPreview.innerHTML = manualContentInput.value;
+            manualContentInput.classList.add('hidden');
+            manualContentPreview.classList.remove('hidden');
+            manualPreviewButton.classList.add('hidden');
+            manualCodeViewButton.classList.remove('hidden');
+        }
+
+        function showManualCodeView() {
+            manualContentInput.classList.remove('hidden');
+            manualContentPreview.classList.add('hidden');
+            manualPreviewButton.classList.remove('hidden');
+            manualCodeViewButton.classList.add('hidden');
+        }
+
+        function handleManualReset() {
+            if (!confirm('수동 포스팅 양식의 모든 내용을 지우시겠습니까?')) return;
+            manualTitleInput.value = '';
+            manualContentInput.value = '';
+            manualLabelsInput.value = '';
+            manualPublishTimeInput.value = '';
+            showManualCodeView();
+        }
+
+        async function handleManualPublishPost() {
+            const title = manualTitleInput.value.trim();
+            const content = manualContentInput.value.trim();
+            const labelsText = manualLabelsInput.value.trim();
+            const publishTime = manualPublishTimeInput.value;
+
+            if (!title || !content) {
+                showStatusMessage('제목과 본문을 모두 입력해주세요.', 'error');
+                return;
+            }
+            
+            // 라벨 처리 (150자 제한)
+            const rawLabels = labelsText ? labelsText.split(',').map(tag => tag.trim()).filter(Boolean) : [];
+            const processedLabels = processLabels(rawLabels);
+            
+            if (rawLabels.length !== processedLabels.length) {
+                addLog(`⚠️ 라벨이 150자 제한으로 인해 ${rawLabels.length}개에서 ${processedLabels.length}개로 조정되었습니다.`, 'warn');
+            }
+            
+            const postData = {
+                title: title,
+                content: content,
+                labels: processedLabels
+            };
+            
+            initLog();
+            progressContainer.classList.remove('hidden');
+            addLog(`📝 수동 포스팅 시작: "${title}"`, 'info');
+            
+            if (postData.labels.length > 0) {
+                const labelString = postData.labels.join(', ');
+                addLog(`🏷️ 라벨 (${labelString.length}자): ${labelString}`, 'info');
+            }
+            
+            await publishPost(postData, publishTime);
+            progressContainer.classList.add('hidden');
+        }
+        
+        // 개선된 createAIPost 함수 - Pollinations 이미지 사용
+        async function createAIPost(topic, instructions, shouldGenerateImage) {
+            const steps = shouldGenerateImage ? 4 : 3;
+            let currentStep = 0;
+            
+            // Step 1: Generate Content
+            currentStep++;
+            updateProgress((currentStep/steps) * 100, `단계 ${currentStep}/${steps}: AI 글 작성`);
+            addLog('📝 AI가 글을 작성하기 시작했습니다...', 'info');
+            
+            const articlePrompt = `
+                **주제:** ${topic}
+                
+                **지침:**
+                ${instructions}
+                
+                **중요 규칙:**
+                - 반드시 HTML 코드만 제공하세요
+                - 절대 h1 태그는 사용하지 마세요
+                - 목차는 반드시 네온 그라데이션 스타일로 1번만
+                - 목차는 문서에 단 1번만 나와야 합니다
+                - 각 섹션은 중복 없이 1번씩만 출력하세요
+                - 글자수는 10000자 이상 충실히 작성하세요
+                - 마지막에 면책문구와 요약글 각 박스에 나온다. 
+            `;
+            
+            // 실시간 진행 표시를 위한 애니메이션
+            let dots = 0;
+            const writingInterval = setInterval(() => {
+                dots = (dots + 1) % 4;
+                const dotStr = '.'.repeat(dots);
+                const elapsed = Math.floor((Date.now() - globalStartTime) / 1000);
+                currentStatusEl.textContent = `AI가 글을 작성 중${dotStr} (${elapsed}초 경과)`;
+            }, 500);
+            
+            try {
+                const articleContent = await geminiFetch('gemini-2.5-flash-preview-05-20', articlePrompt);
+                clearInterval(writingInterval);
+                addLog(`✅ 글 작성 완료! (약 ${Math.round(articleContent.length/100)*100}자)`, 'success');
+                let finalContent = articleContent;
+
+                // Step 2: Generate Images using Pollinations
+                if(shouldGenerateImage) {
+                    const h2Regex = /<h2[^>]*>(.*?)<\/h2>/gi;
+                    const h2Matches = [...finalContent.matchAll(h2Regex)];
+                    let imagePrompts = [topic];
+                    if (h2Matches.length >= 1) {
+                        imagePrompts.push(h2Matches[Math.floor(h2Matches.length / 2)][1].trim());
+                    }
+
+                    const imageUrls = [];
+                    for (let i = 0; i < imagePrompts.length; i++) {
+                        const p = imagePrompts[i];
+                        if (!isProcessRunning) throw new Error('작업 중지됨');
+                        
+                        // Generate image with Pollinations
+                        currentStep++;
+                        updateProgress((currentStep/steps) * 100, `단계 ${currentStep}/${steps}: 이미지 ${i+1}/${imagePrompts.length} 생성`);
+                        addLog(`🎨 Pollinations AI 이미지 생성 시작: "${p.substring(0, 30)}..."`, 'info');
+                        
+                        const imageUrl = await generatePollinationsImage(p);
+                        imageUrls.push({ url: imageUrl, alt: p });
+                        addLog(`✅ 이미지 생성 완료!`, 'success');
+                    }
+
+                    // Insert images into content
+                    addLog('🖼️ 본문에 이미지 삽입 중...', 'info');
+                    let imageTags = imageUrls.map(img => {
+                        const altText = img.alt.replace(/"/g, '&quot;');
+                        return `<figure style="text-align: center; margin: 2em 0;">
+                            <img src="${img.url}" alt="${altText}" loading="lazy" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <figcaption style="text-align: center; font-size: 0.9em; color: #666; margin-top: 0.5em;">${altText}</figcaption>
+                        </figure>`;
+                    });
+
+                    // 첫 번째 이미지를 썸네일로 설정
+                    if (imageTags.length > 0) {
+                        const separator = '<!-- more -->';
+                        const paragraphs = finalContent.split(/(<\/p>)/);
+                        const assembledParts = [];
+
+                        for (let i = 0; i < paragraphs.length; i += 2) {
+                            assembledParts.push(paragraphs[i] + (paragraphs[i + 1] || ''));
+                        }
+                        
+                        if (assembledParts.length > 0) {
+                            const thumbnailTag = imageTags.shift();
+                            assembledParts[0] = assembledParts[0] + `\n${thumbnailTag}\n${separator}`;
+                        }
+                        
+                        if (imageTags.length > 0 && assembledParts.length > 2) {
+                            const secondImageTag = imageTags.shift();
+                            const midPoint = Math.floor(assembledParts.length / 2);
+                            assembledParts.splice(midPoint, 0, secondImageTag);
+                        }
+                        
+                        finalContent = assembledParts.join('');
+                    }
+                    addLog(`✅ ${imageUrls.length}개 이미지 삽입 완료`, 'success');
+                }
+
+                // Step 3: Generate Tags (with 150 character limit)
+                currentStep++;
+                updateProgress((currentStep/steps) * 100, `단계 ${currentStep}/${steps}: SEO 태그 생성`);
+                addLog('🏷️ AI가 SEO 태그를 생성 중...', 'info');
+                
+                const tagsPrompt = `당신은 블로그의 SEO 전문가입니다. 다음 글의 주제를 분석하여, **가장 관련성이 높고 검색 노출에 유리한** 키워드 태그(라벨)를 5개에서 7개 사이로 생성해주세요. 
+                **중요:** 
+                - 각 태그는 최대 15자 이내로 짧고 간결하게
+                - '${topic}' 주제와 직접적으로 관련된 키워드만 포함
+                - 결과는 콤마(,)로 구분된 키워드 목록으로만 제공
+                
+                주제: ${topic}`;
+                
+                const tagsText = await geminiFetch('gemini-2.5-flash-preview-05-20', tagsPrompt);
+                
+                let labels = tagsText.split(',').map(tag => tag.trim()).filter(Boolean);
+                // 라벨 150자 제한 처리
+                const processedLabels = processLabels(labels);
+                
+                if (labels.length !== processedLabels.length) {
+                    addLog(`⚠️ 라벨이 150자 제한으로 ${labels.length}개에서 ${processedLabels.length}개로 조정됨`, 'warn');
+                }
+                
+                const labelString = processedLabels.join(', ');
+                addLog(`✅ SEO 태그 ${processedLabels.length}개 생성 완료 (${labelString.length}자)`, 'success');
+
+                // 완료
+                updateProgress(100, `✅ 모든 콘텐츠 생성 완료!`);
+                currentStatusEl.textContent = '모든 콘텐츠 생성 완료!';
+                
+                return { title: topic, content: finalContent, labels: processedLabels };
+                
+            } catch (error) {
+                clearInterval(writingInterval);
+                throw error;
+            }
+        }
+
+        // 개선된 handleAIPublishPost 함수 - 중복 체크 추가
+        async function handleAIPublishPost() {
+            const topic = postTopicInput.value.trim();
+            const publishTime = aiPublishTimeInput.value;
+            const instructions = writingInstructionsInput.value.trim();
+            const shouldGenerateImage = generateImageCheckboxSingle.checked;
+
+            if (!topic) {
+                showStatusMessage('글 주제를 입력해주세요.', 'error');
+                return;
+            }
+            if (!instructions) {
+                showStatusMessage('글쓰기 지침을 입력해주세요.', 'error');
+                return;
+            }
+            
+            // 예약 발행인 경우 중복 체크
+            if (publishTime) {
+                await fetchScheduledPostTitles();
+                if (scheduledPostTitles.has(topic.toLowerCase())) {
+                    if (!confirm(`"${topic}" 제목의 글이 이미 예약되어 있습니다.\n그래도 계속하시겠습니까?`)) {
+                        return;
+                    }
+                }
+            }
+            
+            handleSaveInstructions();
+
+            isProcessRunning = true;
+            setPublishButtonState(true, 'single');
+            initLog();
+            progressContainer.classList.remove('hidden');
+
+            // 더 정확한 시간 예측
+            const ESTIMATED_TIME = {
+                contentGeneration: 20,  // 20초
+                imageGeneration: shouldGenerateImage ? 15 : 0,  // 15초 (Pollinations는 더 빠름)
+                tagGeneration: 10,  // 10초
+                publishing: 5  // 5초
+            };
+            
+            const TOTAL_TIME = Object.values(ESTIMATED_TIME).reduce((a, b) => a + b, 0);
+            globalStartTime = Date.now();
+            
+            // 실시간 타이머 표시
+            let elapsed = 0;
+            const timerInterval = setInterval(() => {
+                elapsed = Math.floor((Date.now() - globalStartTime) / 1000);
+                const remaining = Math.max(0, TOTAL_TIME - elapsed);
+                
+                if (remaining > 0) {
+                    timerContainer.innerHTML = `⏱️ 예상 남은 시간: ${remaining}초 (경과: ${elapsed}초)`;
+                } else {
+                    timerContainer.innerHTML = `⏳ 거의 완료되었습니다... (${elapsed}초 경과)`;
+                }
+            }, 1000);
+            
+            try {
+                addLog('🚀 AI 포스팅 프로세스 시작', 'info');
+                addLog(`📋 주제: "${topic}"`, 'info');
+                addLog(`🖼️ 이미지 생성: ${shouldGenerateImage ? 'Pollinations.ai 사용' : '아니오'}`, 'info');
+                
+                currentStatusEl.textContent = 'AI 포스팅 프로세스 시작...';
+                
+                const postData = await createAIPost(topic, instructions, shouldGenerateImage);
+                
+                addLog('📤 블로그에 발행 중...', 'info');
+                updateProgress(95, '블로그에 글을 발행하는 중...');
+                currentStatusEl.textContent = '블로그에 글을 발행하는 중...';
+                
+                await publishPost(postData, publishTime);
+                
+                // 성공 시 Set에 추가
+                if (publishTime) {
+                    scheduledPostTitles.add(topic.toLowerCase());
+                }
+                
+                updateProgress(100, '✅ 완료!');
+                currentStatusEl.textContent = '포스팅 완료!';
+                postTopicInput.value = '';
+                
+                // 완료 통계 표시
+                clearInterval(timerInterval);
+                const totalElapsed = Math.floor((Date.now() - globalStartTime) / 1000);
+                timerContainer.innerHTML = `✅ 완료! (총 소요시간: ${totalElapsed}초)`;
+                
+                addLog(`🎉 총 ${totalElapsed}초 만에 포스팅 완료!`, 'success');
+                
+                // 진행률 바 성공 색상으로 변경
+                progressBar.classList.remove('error');
+                progressBar.classList.add('success');
+
+            } catch (error) {
+                clearInterval(timerInterval);
+                handlePostingError(error);
+                progressBar.classList.remove('success');
+                progressBar.classList.add('error');
+            } finally {
+                isProcessRunning = false;
+                setPublishButtonState(false, 'single');
+            }
+        }
+        
+        // --- 대량 예약 로직 (중복 체크 추가) ---
+        async function handleBulkSchedule() {
+            let selectedTopics = Array.from(topicIdeasList.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+            const times = scheduleTimesInput.value.split(',').map(t => t.trim()).filter(Boolean);
+            const days = parseInt(scheduleDaysInput.value, 10);
+            const delayMinutes = parseInt(scheduleDelayInput.value, 10);
+            const shouldGenerateImages = generateImageCheckboxBulk.checked;
+
+            if (selectedTopics.length === 0) {
+                showStatusMessage('예약할 주제를 하나 이상 선택해주세요.', 'error'); 
+                return;
+            }
+            if (times.length === 0 || !times.every(t => /^\d{2}:\d{2}$/.test(t))) {
+                showStatusMessage('발행 시간을 "HH:MM" 형식으로 하나 이상 입력해주세요.', 'error'); 
+                return;
+            }
+            if (isNaN(days) || days < 1) {
+                showStatusMessage('예약 기간은 1일 이상이어야 합니다.', 'error'); 
+                return;
+            }
+            if (isNaN(delayMinutes) || delayMinutes < 1) {
+                showStatusMessage('대기 시간은 1분 이상이어야 합니다.', 'error'); 
+                return;
+            }
+
+            // 예약된 글 제목 먼저 가져오기
+            showStatusMessage('예약된 글 목록을 확인하는 중...', 'info');
+            await fetchScheduledPostTitles();
+            
+            // 중복 제목 체크
+            const duplicateTopics = selectedTopics.filter(topic => 
+                scheduledPostTitles.has(topic.toLowerCase())
+            );
+            
+            if (duplicateTopics.length > 0) {
+                const duplicateList = duplicateTopics.join('\n- ');
+                if (!confirm(`다음 주제들은 이미 예약되어 있습니다:\n\n- ${duplicateList}\n\n중복된 주제를 제외하고 계속하시겠습니까?`)) {
+                    return;
+                }
+                // 중복 제거
+                selectedTopics = selectedTopics.filter(topic => 
+                    !scheduledPostTitles.has(topic.toLowerCase())
+                );
+                if (selectedTopics.length === 0) {
+                    showStatusMessage('예약 가능한 새로운 주제가 없습니다.', 'error');
+                    return;
+                }
+            }
+
+            const totalSlots = times.length * days;
+            if (selectedTopics.length > totalSlots) {
+                if (!confirm(`선택된 주제(${selectedTopics.length}개)가 예약 가능한 자리(${totalSlots}개)보다 많습니다. ${totalSlots}개만 예약하시겠습니까?`)) {
+                    return;
+                }
+            }
+
+            let lastPublishDate = new Date();
+            bulkScheduleQueue = [];
+            let topicIndex = 0;
+
+            for (let i = 0; i < days && topicIndex < selectedTopics.length; i++) {
+                const targetDay = new Date();
+                targetDay.setDate(targetDay.getDate() + i);
+
+                for (const time of times) {
+                    if (topicIndex >= selectedTopics.length) break;
+                    
+                    const [hour, minute] = time.split(':');
+                    let publishDate = new Date(targetDay.getFullYear(), targetDay.getMonth(), targetDay.getDate(), hour, minute);
+
+                    if (publishDate < new Date()) continue;
+
+                    if (publishDate > lastPublishDate) {
+                        bulkScheduleQueue.push({
+                            topic: selectedTopics[topicIndex],
+                            publishDate: publishDate,
+                            generateImage: shouldGenerateImages
+                        });
+                        lastPublishDate = publishDate;
+                        topicIndex++;
+                    }
+                }
+            }
+            
+            if (!confirm(`${bulkScheduleQueue.length}개의 글을 대량 예약하시겠습니까? 이 작업은 완료까지 오랜 시간이 걸릴 수 있습니다.`)) return;
+
+            isProcessRunning = true;
+            initLog();
+            progressContainer.classList.remove('hidden');
+            setPublishButtonState(true, 'bulk');
+            globalStartTime = Date.now();
+            processBulkScheduleQueue();
+        }
+
+        async function processBulkScheduleQueue() {
+            const totalJobs = Array.from(topicIdeasList.querySelectorAll('input[type="checkbox"]:checked')).length;
+
+            if (!isProcessRunning || bulkScheduleQueue.length === 0) {
+                if (isProcessRunning) {
+                    updateProgress(100, `(${totalJobs}/${totalJobs}) 모든 대량 예약 작업이 완료되었습니다.`);
+                    showStatusMessage('대량 예약이 완료되었습니다.', 'success');
+                }
+                setPublishButtonState(false, 'bulk');
+                isProcessRunning = false;
+                return;
+            }
+            
+            const completedJobs = totalJobs - bulkScheduleQueue.length;
+            const job = bulkScheduleQueue.shift();
+            
+            updateProgress((completedJobs / totalJobs) * 100, `(${completedJobs + 1}/${totalJobs}) "${job.topic}" 포스팅 시작...`);
+
+            try {
+                const postData = await createAIPost(job.topic, WRITING_INSTRUCTIONS, job.generateImage);
+                await publishPost(postData, job.publishDate.toISOString());
+                
+                // 성공 시 Set에 추가하여 실시간 중복 방지
+                scheduledPostTitles.add(job.topic.toLowerCase());
+                
+                addLog(`✅ "${job.topic}" 예약 성공.`, 'success');
+            } catch (e) {
+                addLog(`❌ "${job.topic}" 예약 실패: ${e.message}`, 'error');
+            } finally {
+                if (isProcessRunning && bulkScheduleQueue.length > 0) {
+                    const delayMinutes = parseInt(scheduleDelayInput.value, 10) || 5;
+                    const delay = delayMinutes * 60 * 1000;
+                    addLog(`⏳ ${delayMinutes}분 후 다음 작업을 시작합니다...`);
+                    setTimeout(processBulkScheduleQueue, delay);
+                } else {
+                    processBulkScheduleQueue();
+                }
+            }
+        }
+
+        async function publishPost(postData, publishTime) {
+            const finalPostData = { ...postData };
+            const isScheduled = !!publishTime;
+            
+            const url = `https://www.googleapis.com/blogger/v3/blogs/${selectedBlogId}/posts/`;
+            
+            if (isScheduled) {
+                const scheduledDate = new Date(publishTime);
+                if (scheduledDate > new Date()) {
+                    finalPostData.published = scheduledDate.toISOString();
+                }
+            }
+
+            try {
+                const result = await fetchWithAuth(url, {
+                    method: 'POST',
+                    body: JSON.stringify(finalPostData)
+                });
+                const message = (isScheduled && new Date(finalPostData.published) > new Date()) ? '성공적으로 예약되었습니다!' : '성공적으로 발행되었습니다!';
+                
+                if (!isProcessRunning || bulkScheduleQueue.length === 0) {
+                    showStatusMessage(`${message} <a href="${result.url}" target="_blank" class="underline">여기서 확인</a>`, 'success');
+                }
+                addLog(message, 'success');
+            } catch (error) {
+                 if (!isProcessRunning || bulkScheduleQueue.length === 0) {
+                    showStatusMessage(`발행 실패: ${error.message}`, 'error');
+                 }
+                 addLog(`발행 실패: ${error.message}`, 'error');
+                 throw error; 
+            }
+        }
+        
+        // --- UI/UX 함수 ---
+        function setPublishButtonState(isLoading, mode) {
+            const bulkButtons = [generateTopicsButton, startBulkScheduleButton];
+            const singleButton = aiPublishButton;
+
+            if (isLoading) {
+                stopButton.classList.remove('hidden');
+                progressContainer.classList.remove('hidden');
+                if (mode === 'bulk') {
+                    bulkButtons.forEach(btn => btn.disabled = true);
+                } else {
+                    singleButton.disabled = true;
+                }
+            } else {
+                stopButton.classList.add('hidden');
+                bulkButtons.forEach(btn => btn.disabled = false);
+                singleButton.disabled = false;
+            }
+        }
+        
+        function showStatusMessage(message, type) {
+            statusMessageEl.innerHTML = message;
+            statusMessageEl.className = 'mt-4 p-4 rounded-md text-center';
+            const typeClasses = {
+                success: ['bg-green-100', 'text-green-800'],
+                error: ['bg-red-100', 'text-red-800'],
+                info: ['bg-blue-100', 'text-blue-800']
+            };
+            statusMessageEl.classList.add(...(typeClasses[type] || typeClasses.info));
+            statusMessageEl.classList.remove('hidden');
+        }
+
+        function initLog() {
+            logList.innerHTML = '';
+            progressBar.style.width = '0%';
+            progressBar.classList.remove('success', 'error');
+            statusMessageEl.classList.add('hidden');
+            currentStatusEl.textContent = '준비 중...';
+            timerContainer.textContent = '';
+        }
+
+        function addLog(message, type = 'info') {
+            const li = document.createElement('li');
+            const time = new Date().toLocaleTimeString();
+            let icon = '';
+            let typeClass = '';
+            
+            if (type === 'success') {
+                typeClass = 'log-success';
+                icon = '✅';
+            } else if (type === 'error') {
+                typeClass = 'log-error';
+                icon = '❌';
+            } else if (type === 'warn') {
+                typeClass = 'log-warn';
+                icon = '⚠️';
+            } else if (type === 'info') {
+                typeClass = 'log-info';
+                icon = '📌';
+            }
+
+            li.innerHTML = `<span class="log-time">[${time}]</span> <span class="${typeClass}">${message}</span>`;
+            if (logList) {
+                logList.appendChild(li);
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+            return li;
+        }
+
+        function handlePostingError(error) {
+            console.error('포스팅 실패:', error);
+            currentStatusEl.textContent = '작업 실패';
+            if (error.message === '작업 중지됨') {
+                showStatusMessage('작업이 사용자에 의해 중지되었습니다.', 'error');
+                addLog('작업이 중지되었습니다.', 'error');
+            } else {
+                showStatusMessage(`발행 실패: ${error.message}`, 'error');
+                addLog(`발행 실패: ${error.message}`, 'error');
+            }
+        }
+        
+        function updateProgress(percentage, message) {
+            if (message) {
+                currentStatusEl.textContent = message;
+                addLog(message);
+            }
+            progressBar.style.width = `${percentage}%`;
+        }
+        
+    </script>
 </body>
 </html>
