@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>궁극의 AI 블로그 자동 포스팅</title>
+    <title>스타일러프로 API 블로그 자동 포스팅  - by 디지털노마드</title>
     <!-- Google Identity Services Library -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Tailwind CSS -->
@@ -92,19 +92,417 @@
         #progress-bar.error {
             background: linear-gradient(90deg, #ef4444 0%, #f87171 50%, #ef4444 100%);
         }
+        #progress-bar.paused {
+            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%);
+            animation: none;
+        }
         .duplicate-warning {
             background-color: #fef3c7;
             border-left: 4px solid #f59e0b;
+        }
+        
+        /* 토큰 타이머 스타일 */
+        .token-timer {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.05em;
+        }
+        
+        .token-warning {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+        
+        /* 토큰 상태 바 */
+        .token-progress-bar {
+            transition: width 1s linear, background-color 0.3s ease;
+        }
+        
+        /* 모달 스타일 */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        /* 자동 갱신 토글 스위치 */
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #3b82f6;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+        
+        /* 일시정지 상태 표시 */
+        .paused-indicator {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.5; }
+        }
+        
+        /* 작업 큐 상태 */
+        .queue-status {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* 정확한 시간 표시 스타일 */
+        .precise-timer {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        /* 선택된 주제 하이라이트 */
+        .topic-item.selected {
+            background-color: #dbeafe !important;
+            border: 2px solid #3b82f6;
+        }
+        
+        /* 실시간 시계 스타일 */
+        .realtime-clock {
+            font-variant-numeric: tabular-nums;
+            font-family: monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        /* 토큰 상태 설명 */
+        .token-status-explanation {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        /* 예약 일정 미리보기 */
+        .schedule-preview {
+            background-color: #f3f4f6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .schedule-preview-item {
+            padding: 4px 8px;
+            margin: 2px 0;
+            background-color: white;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .schedule-preview-item.conflict {
+            background-color: #fee2e2;
+            color: #991b1b;
+            text-decoration: line-through;
+        }
+        
+        .schedule-preview-item.skipped {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        /* 검증 메시지 스타일 */
+        .validation-message {
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .validation-success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+        
+        .validation-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .validation-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+        
+        /* 실시간 매칭 계산 표시 */
+        .matching-calculation {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            font-size: 13px;
+            font-family: monospace;
+        }
+        
+        .calculation-perfect {
+            background-color: #f0fdf4;
+            border-color: #86efac;
+            color: #166534;
+        }
+        
+        .calculation-shortage {
+            background-color: #fffbeb;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+        
+        .calculation-excess {
+            background-color: #fef2f2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+        
+        .copyright-footer {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        /* 스마트 스케줄링 관련 스타일 */
+        .smart-schedule-info {
+            background-color: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+        
+        .conflict-summary {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+        }
+        
+        .conflict-item {
+            font-size: 12px;
+            color: #92400e;
+            margin: 2px 0;
+        }
+
+        /* 대량 예약 시작 날짜 선택 스타일 */
+        .bulk-start-date-section {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        
+        .bulk-date-info {
+            background-color: #dbeafe;
+            border: 1px solid #3b82f6;
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #1e40af;
+        }
+
+        /* 블로그 선택 모달 스타일 */
+        .blog-selection-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: none;
+        }
+        
+        .blog-selection-modal.active {
+            display: flex;
+        }
+        
+        .blog-modal-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .blog-item {
+            padding: 12px;
+            margin: 8px 0;
+            background-color: #f9fafb;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .blog-item:hover {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            transform: translateY(-1px);
+        }
+        
+        .blog-item.current {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+        }
+        
+        .blog-item.current::after {
+            content: " ✓ 현재 선택됨";
+            color: #166534;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        /* 블로그 변경 버튼 스타일 */
+        .change-blog-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .change-blog-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
 
+    <!-- 블로그 선택 모달 -->
+    <div id="blog-selection-modal" class="blog-selection-modal">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="blog-modal-content">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">블로그 선택</h3>
+                        <button onclick="closeBlogSelectionModal()" class="text-gray-400 hover:text-gray-600">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600">포스팅할 블로그를 선택하세요.</p>
+                    </div>
+                    <div id="blog-modal-loader" class="flex justify-center items-center h-32 hidden">
+                        <div class="loader"></div>
+                    </div>
+                    <div id="blog-modal-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 토큰 연장 모달 -->
+    <div id="token-extend-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">세션 연장 알림</h3>
+                    <button onclick="closeTokenModal()" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="mb-6">
+                    <p class="text-gray-600 dark:text-gray-400 mb-2">
+                        보안을 위해 <span id="modal-time-remaining" class="font-bold text-red-600"></span> 후에 자동 로그아웃됩니다.
+                    </p>
+                    <p class="text-sm text-gray-500">계속 사용하시려면 세션을 연장해주세요.</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="extendSession()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                        세션 연장하기
+                    </button>
+                    <button onclick="closeTokenModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">
+                        나중에
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 1. 설정/로그인 화면 -->
     <div id="settings-view" class="max-w-lg mx-auto min-h-screen flex items-center justify-center p-4">
         <div class="w-full bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
             <div id="settings-form">
-                <h2 class="text-2xl font-bold text-center mb-6">프로그램 설정</h2>
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold">스타일러프로 API 블로그 자동 포스팅</h2>
+                    <p class="text-sm text-gray-600 mt-2">by 유튜버 디지털노마드</p>
+                </div>
                 <div class="space-y-4">
                     <div>
                         <label for="client-id-input" class="block text-sm font-medium">Google OAuth 클라이언트 ID</label>
@@ -123,7 +521,7 @@
                                 <i data-lucide="eye" class="w-5 h-5"></i>
                             </button>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">이미지는 Pollinations.ai를 사용합니다 (무료, API 키 불필요)</p>
+                        <p class="text-xs text-gray-500 mt-1">이미지 생성까지 자동 (무료, API 키 불필요)</p>
                     </div>
                 </div>
                 <button id="save-settings-button" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
@@ -147,6 +545,19 @@
                         </div>
                     </div>
                 </details>
+
+                <!-- 저작권 푸터 -->
+                <div class="copyright-footer mt-6">
+                    <div class="font-bold">🚀 스타일러프로 API 블로그 자동 포스팅</div>
+                    <div class="mt-2">
+                        <div>제작자: <strong>김도현</strong> (유튜버 디지털노마드)</div>
+                        <div class="text-xs mt-2 opacity-80">
+                            ⚖️ <strong>법적 공지</strong><br>
+                            본 프로그램의 무단 복제, 배포, 상업적 이용을 금지합니다.<br>
+                            저작권법에 의해 보호받는 소프트웨어입니다.
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -155,20 +566,68 @@
     <div id="blog-selection-view" class="max-w-lg mx-auto min-h-screen p-4 hidden">
          <header class="bg-blue-600 text-white p-4 flex items-center justify-between rounded-t-lg">
             <h1 class="text-xl font-bold">블로그 선택</h1>
-            <button id="logout-button-selection" title="로그아웃"><i data-lucide="log-out"></i></button>
+            <div class="flex items-center gap-3">
+                <div id="token-status-selection" class="hidden"></div>
+                <button id="logout-button-selection" title="로그아웃"><i data-lucide="log-out"></i></button>
+            </div>
         </header>
         <div class="bg-white dark:bg-gray-800 p-4 rounded-b-lg shadow-lg">
             <p class="mb-4">포스팅할 블로그를 선택하세요.</p>
             <div id="blog-list-loader" class="flex justify-center items-center h-32"><div class="loader"></div></div>
             <ul id="blog-list" class="space-y-2"></ul>
+
+            <!-- 저작권 푸터 -->
+            <div class="copyright-footer mt-6">
+                <div>© 2025 김도현 (유튜버 디지털노마드)</div>
+                 <div class="text-xs mt-1 opacity-80">무단복제·배포금지 | 저작권법 보호대상</div>
+            </div>
         </div>
     </div>
 
     <!-- 3. 포스팅 화면 -->
     <div id="posting-view" class="max-w-lg mx-auto bg-white dark:bg-gray-800 min-h-screen shadow-lg hidden">
-        <header class="bg-blue-600 text-white p-4 flex items-center justify-between sticky top-0 z-10">
-            <h1 id="blog-title" class="text-xl font-bold truncate"></h1>
-            <button id="logout-button-main" title="로그아웃"><i data-lucide="log-out"></i></button>
+        <header class="bg-blue-600 text-white p-4 sticky top-0 z-10">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <h1 id="blog-title" class="text-xl font-bold truncate flex-1"></h1>
+                    <button id="change-blog-btn" class="change-blog-btn" title="다른 블로그 선택">
+                        <i data-lucide="refresh-cw" class="w-3 h-3 inline mr-1"></i>
+                        블로그변경
+                    </button>
+                </div>
+                <button id="logout-button-main" title="로그아웃"><i data-lucide="log-out"></i></button>
+            </div>
+            
+            <!-- 실시간 시계 표시 -->
+            <div id="realtime-clock" class="text-center text-sm realtime-clock"></div>
+            
+            <!-- 토큰 상태 표시 영역 -->
+            <div id="token-status-bar" class="bg-white/10 rounded-lg p-2 hidden mt-2">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs">세션 만료까지</span>
+                        <span id="token-timer" class="token-timer text-sm font-bold">59:59</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="toggle-switch" title="자동 연장 켜기/끄기">
+                            <input type="checkbox" id="auto-refresh-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span id="auto-refresh-status" class="text-xs">끔</span>
+                        <button id="manual-refresh-btn" class="px-2 py-1 bg-white/20 hover:bg-white/30 rounded text-xs" title="지금 세션 연장하기">
+                            연장
+                        </button>
+                    </div>
+                </div>
+                <div class="w-full bg-white/20 rounded-full h-1">
+                    <div id="token-progress" class="token-progress-bar bg-white h-1 rounded-full" style="width: 100%"></div>
+                </div>
+                <div class="token-status-explanation">
+                    <p class="text-xs">
+                        <span id="token-explanation"></span>
+                    </p>
+                </div>
+            </div>
         </header>
         
         <div class="border-b border-gray-200 dark:border-gray-700">
@@ -181,6 +640,22 @@
         </div>
 
         <main class="p-4">
+            <!-- 작업 큐 상태 표시 -->
+            <div id="queue-status" class="queue-status hidden">
+                <div class="flex justify-between items-center">
+                    <span id="queue-info">대기 중인 작업: 0개</span>
+                    <div class="flex gap-2">
+                        <button id="pause-resume-btn" class="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm">
+                            <i data-lucide="pause" class="w-4 h-4 inline"></i> 일시정지
+                        </button>
+                        <button id="clear-queue-btn" class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 rounded text-sm">
+                            <i data-lucide="trash-2" class="w-4 h-4 inline"></i> 큐 비우기
+                        </button>
+                    </div>
+                </div>
+                <div id="next-posting-time" class="text-xs mt-2 text-white/80"></div>
+            </div>
+
             <!-- AI 대량 예약 모드 -->
             <div id="ai-bulk-schedule-mode-content" class="tab-content space-y-4">
                 <p class="text-sm text-gray-600 dark:text-gray-400">1. 핵심 키워드로 다양한 주제를 생성합니다.<br>2. 생성된 주제 중 포스팅할 주제들을 선택합니다.<br>3. 아래에서 예약 스케줄을 설정하고 작업을 시작하세요.</p>
@@ -203,29 +678,58 @@
                 <div id="topic-ideas-loader" class="flex justify-center items-center h-32 hidden"><div class="loader"></div></div>
                 <div id="topic-selection-container" class="hidden">
                     <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-lg font-semibold">주제 선택 (<span id="selected-topic-count">0</span>개)</h3>
-                        <button id="select-all-topics-button" class="text-sm text-blue-600 hover:underline">전체 선택</button>
+                        <h3 class="text-lg font-semibold">주제 선택 (<span id="selected-topic-count">0</span>/<span id="total-topic-count">0</span>개)</h3>
+                        <div class="flex gap-2">
+                            <button id="select-all-topics-button" class="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">전체 선택</button>
+                            <button id="deselect-all-topics-button" class="text-sm bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">선택 해제</button>
+                        </div>
                     </div>
                     <ul id="topic-ideas-list" class="space-y-2 max-h-60 overflow-y-auto border p-2 rounded-md"></ul>
                 </div>
                 <div id="bulk-schedule-config" class="space-y-4 pt-4 border-t hidden">
                     <h3 class="text-lg font-semibold">예약 설정</h3>
+                    
+                    <!-- 대량 예약 시작 날짜 설정 -->
+                    <div class="bulk-start-date-section">
+                        <label for="bulk-start-date-input" class="block text-sm font-medium mb-2">📅 예약 시작 날짜</label>
+                        <input type="date" id="bulk-start-date-input" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                        <div id="bulk-date-info" class="bulk-date-info hidden">
+                            <div class="font-semibold mb-1">📍 예약 기간 정보:</div>
+                            <div id="bulk-date-range" class="text-sm"></div>
+                        </div>
+                    </div>
+                    
                     <div>
-                        <label for="schedule-times-input" class="block text-sm font-medium">반복 발행 시간 (쉼표로 구분)</label>
+                        <label for="schedule-times-input" class="block text-sm font-medium">매일 발행할 시간 (쉼표로 구분)</label>
                         <input type="text" id="schedule-times-input" value="09:00, 17:00, 21:00" class="mt-1 block w-full px-3 py-2 border rounded-md" placeholder="예: 09:00, 17:00, 21:00">
+                        <p class="text-xs text-gray-500 mt-1">하루에 발행할 시간을 입력하세요. (예: 09:00, 17:00 = 하루 2회)</p>
                     </div>
                     <div>
-                        <label for="schedule-days-input" class="block text-sm font-medium">예약 기간 (일)</label>
-                        <input type="number" id="schedule-days-input" value="10" min="1" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                        <label for="schedule-days-input" class="block text-sm font-medium">예약할 기간 (일)</label>
+                        <input type="number" id="schedule-days-input" value="1" min="1" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                        <div id="schedule-validation-message"></div>
+                        <div id="schedule-calculation-display"></div>
                     </div>
+                    
+                    <!-- 예약 일정 미리보기 -->
+                    <div id="schedule-preview-container" class="hidden">
+                        <label class="block text-sm font-medium mb-2">📅 예약 일정 미리보기</label>
+                        <div id="schedule-preview" class="schedule-preview"></div>
+                    </div>
+                    
                     <div>
                         <label for="schedule-delay-input" class="block text-sm font-medium">포스트 간 대기 시간 (분)</label>
                         <input type="number" id="schedule-delay-input" value="5" min="1" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                        <p class="text-xs text-gray-500 mt-1">각 포스트 작성 사이의 대기 시간입니다. 서버 부하를 줄이기 위해 사용됩니다.</p>
                     </div>
                     <div class="flex items-center">
                         <input type="checkbox" id="generate-image-checkbox-bulk" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
-                        <label for="generate-image-checkbox-bulk" class="ml-2 block text-sm font-medium">AI로 이미지 생성하기 (Pollinations.ai 무료)</label>
+                        <label for="generate-image-checkbox-bulk" class="ml-2 block text-sm font-medium">AI로 이미지 생성하기 (무료)</label>
                     </div>
+                    <button id="preview-schedule-button" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                        <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                        <span>예약 일정 미리보기</span>
+                    </button>
                     <button id="start-bulk-schedule-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
                         <i data-lucide="calendar-check" class="w-4 h-4 mr-2"></i>
                         <span>대량 예약 작업 시작</span>
@@ -252,7 +756,7 @@
                 </div>
                 <div class="flex items-center">
                     <input type="checkbox" id="generate-image-checkbox-single" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
-                    <label for="generate-image-checkbox-single" class="ml-2 block text-sm font-medium">AI로 이미지 생성하기 (Pollinations.ai 무료)</label>
+                    <label for="generate-image-checkbox-single" class="ml-2 block text-sm font-medium">AI로 이미지 생성하기 (무료)</label>
                 </div>
                 <div class="flex space-x-2">
                     <button id="ai-publish-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
@@ -314,11 +818,26 @@
                 </div>
             </div>
             <div class="flex space-x-2 mt-4">
-                 <button id="stop-button" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg hidden">
-                    AI 작업 중지
+                <button id="stop-button" class="w-1/2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg hidden">
+                    <i data-lucide="stop-circle" class="w-4 h-4 inline"></i> 작업 중지
+                </button>
+                <button id="resume-button" class="w-1/2 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg hidden">
+                    <i data-lucide="play-circle" class="w-4 h-4 inline"></i> 작업 재개
                 </button>
             </div>
             <div id="status-message" class="mt-4 p-4 rounded-md text-center hidden"></div>
+
+            <!-- 저작권 푸터 -->
+            <div class="copyright-footer">
+                <div>🚀 <strong>스타일러프로 API 블로그 자동 포스팅</strong></div>
+                <div class="mt-2">
+                    <div>제작자: <strong>김도현</strong> (유튜버 디지털노마드)</div>
+                    <div class="text-xs mt-2 opacity-80">
+                        ⚖️ <strong>법적 공지:</strong> 본 프로그램의 무단 복제, 배포, 상업적 이용을 금지합니다.<br>
+                        저작권법에 의해 보호받는 소프트웨어입니다.
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -328,13 +847,34 @@
         let WRITING_INSTRUCTIONS = null;
         let accessToken = null;
         let selectedBlogId = null;
+        let selectedBlogName = null; // 현재 선택된 블로그 이름 저장
+        let userBlogs = []; // 사용자 블로그 목록 저장
         let tokenClient;
         let isProcessRunning = false;
+        let isProcessPaused = false;
         let timerInterval = null;
         let progressAnimationInterval = null;
         let bulkScheduleQueue = [];
+        let pausedQueue = [];
         let globalStartTime = null;
-        let scheduledPostTitles = new Set(); // 예약된 글 제목들을 저장
+        let scheduledPostTitles = new Set();
+        let scheduledPostTimes = new Map(); // 날짜별 시간대 저장
+        let totalBulkJobs = 0;
+        let completedBulkJobs = 0;
+        let waitingInterval = null;
+        let realtimeClockInterval = null;
+        let nextPostingTimeInterval = null;
+        
+        // 토큰 관리 변수
+        let tokenExpiryTime = null;
+        let tokenRefreshTimer = null;
+        let tokenCountdownInterval = null;
+        let tokenWarningTimer = null;
+        let isAutoRefreshEnabled = false;
+        let isRefreshing = false;
+        const TOKEN_DURATION = 60 * 60 * 1000;
+        const TOKEN_WARNING_TIME = 5 * 60 * 1000;
+        const TOKEN_AUTO_REFRESH_TIME = 10 * 60 * 1000;
 
         // DOM 요소
         const settingsView = document.getElementById('settings-view');
@@ -348,6 +888,10 @@
         const googleLoginButton = document.getElementById('google-login-button');
         
         const blogTitleEl = document.getElementById('blog-title');
+        const changeBlogBtn = document.getElementById('change-blog-btn');
+        const blogSelectionModal = document.getElementById('blog-selection-modal');
+        const blogModalLoader = document.getElementById('blog-modal-loader');
+        const blogModalList = document.getElementById('blog-modal-list');
         const logoutButtonSelection = document.getElementById('logout-button-selection');
         const logoutButtonMain = document.getElementById('logout-button-main');
         const blogListLoader = document.getElementById('blog-list-loader');
@@ -363,12 +907,22 @@
         const topicSelectionContainer = document.getElementById('topic-selection-container');
         const topicIdeasList = document.getElementById('topic-ideas-list');
         const selectedTopicCountEl = document.getElementById('selected-topic-count');
+        const totalTopicCountEl = document.getElementById('total-topic-count');
         const selectAllTopicsButton = document.getElementById('select-all-topics-button');
+        const deselectAllTopicsButton = document.getElementById('deselect-all-topics-button');
         const bulkScheduleConfig = document.getElementById('bulk-schedule-config');
+        const bulkStartDateInput = document.getElementById('bulk-start-date-input');
+        const bulkDateInfo = document.getElementById('bulk-date-info');
+        const bulkDateRange = document.getElementById('bulk-date-range');
         const scheduleTimesInput = document.getElementById('schedule-times-input');
         const scheduleDaysInput = document.getElementById('schedule-days-input');
+        const scheduleValidationMessage = document.getElementById('schedule-validation-message');
+        const scheduleCalculationDisplay = document.getElementById('schedule-calculation-display');
         const scheduleDelayInput = document.getElementById('schedule-delay-input');
         const startBulkScheduleButton = document.getElementById('start-bulk-schedule-button');
+        const previewScheduleButton = document.getElementById('preview-schedule-button');
+        const schedulePreviewContainer = document.getElementById('schedule-preview-container');
+        const schedulePreview = document.getElementById('schedule-preview');
         const generateImageCheckboxBulk = document.getElementById('generate-image-checkbox-bulk');
 
         const postTopicInput = document.getElementById('post-topic-input');
@@ -390,6 +944,7 @@
         const scheduledLoader = document.getElementById('scheduled-loader');
         const scheduledListUl = document.getElementById('scheduled-list-ul');
         const stopButton = document.getElementById('stop-button');
+        const resumeButton = document.getElementById('resume-button');
         const statusMessageEl = document.getElementById('status-message');
         const progressContainer = document.getElementById('progress-container');
         const logContainer = document.getElementById('log-container');
@@ -397,6 +952,23 @@
         const progressBar = document.getElementById('progress-bar');
         const timerContainer = document.getElementById('timer-container');
         const currentStatusEl = document.getElementById('current-status');
+        const realtimeClockEl = document.getElementById('realtime-clock');
+        const nextPostingTimeEl = document.getElementById('next-posting-time');
+        
+        const queueStatus = document.getElementById('queue-status');
+        const queueInfo = document.getElementById('queue-info');
+        const pauseResumeBtn = document.getElementById('pause-resume-btn');
+        const clearQueueBtn = document.getElementById('clear-queue-btn');
+        
+        const tokenStatusBar = document.getElementById('token-status-bar');
+        const tokenTimer = document.getElementById('token-timer');
+        const tokenProgress = document.getElementById('token-progress');
+        const autoRefreshToggle = document.getElementById('auto-refresh-toggle');
+        const autoRefreshStatus = document.getElementById('auto-refresh-status');
+        const manualRefreshBtn = document.getElementById('manual-refresh-btn');
+        const tokenExtendModal = document.getElementById('token-extend-modal');
+        const modalTimeRemaining = document.getElementById('modal-time-remaining');
+        const tokenExplanation = document.getElementById('token-explanation');
         
         const defaultInstructions = `반드시 html 코드만 제공한다. 절대 h1 태그는 사용하지 않는다.
 
@@ -404,6 +976,9 @@
 
 중복(단어,문장 반복금지) - 목차나 섹션이 2번 나오면 안됨
 
+중복(단어,문장 반복금지) - 목차나 섹션이 2번 나오면 안됨
+네온 목차가 반드시 나와야 한다. 
+면책문구와 요약글도 박스에 나와야 한다. 
 1. 목차 (TOC) - 단 1번만, 문서 최상단에
 <!-- 📋 목차: 동적 스타일 적용 -->
 <div class="toc-container">
@@ -495,7 +1070,7 @@
         }
     }
 </style>
-2. 인트로 출력 - 목차 바로 다음
+</style>2. 인트로 출력 - 목차 바로 다음
 <p data-ke-size="size16">도입부 내용... 주제에 대한 흥미로운 소개와 독자의 관심을 끄는 내용</p>
 <p data-ke-size="size16">&nbsp;</p>
 
@@ -532,14 +1107,16 @@
 - h1 태그 절대 사용 금지 (제목은 블로거가 자동 처리)
 - 절대 ** 또는 * 사용 금지
 - 목차는 문서에 단 1번만 나옴
-- 목차는 반드시 네온 그라데이션 스타일 포함
-- 각 섹션은 1번씩만 출력
+- 목차는 반드시 네온 스타일 포함
+- 각 섹션은 중복 없이 1번씩만 출력
+- 마지막에 면책문구와 요약글 각 박스에 나온다. 
+- 본문에 태그 금지  
 - 중복 내용 없이 각 섹션 독립적으로 작성
 - "합니다", "입니다" 대신 "해요", "이에요" 사용
 - 글자수 10000자 이상 충실히 작성
 - HTML 코드만 제공, 주석이나 설명 없음
 - 표 글자는 반드시 검정색(#000000)으로 가독성 확보`;
-
+   
         // --- 초기화 및 뷰 관리 ---
         window.onload = () => {
             loadSettings();
@@ -548,13 +1125,26 @@
                 initializeGsi();
             }
             lucide.createIcons();
+            
+            isAutoRefreshEnabled = localStorage.getItem('autoRefreshToken') === 'true';
+            if (autoRefreshToggle) {
+                autoRefreshToggle.checked = isAutoRefreshEnabled;
+                updateAutoRefreshStatus();
+            }
+            
+            startRealtimeClock();
+            setDefaultDates();
+            
             saveSettingsButton.addEventListener('click', handleSaveSettings);
             googleLoginButton.addEventListener('click', () => tokenClient.requestAccessToken());
             logoutButtonSelection.addEventListener('click', handleLogout);
             logoutButtonMain.addEventListener('click', handleLogout);
+            changeBlogBtn.addEventListener('click', showBlogSelectionModal);
             generateTopicsButton.addEventListener('click', handleGenerateTopics);
             selectAllTopicsButton.addEventListener('click', handleSelectAllTopics);
+            deselectAllTopicsButton.addEventListener('click', handleDeselectAllTopics);
             startBulkScheduleButton.addEventListener('click', handleBulkSchedule);
+            previewScheduleButton.addEventListener('click', handlePreviewSchedule);
             addKeywordButton.addEventListener('click', addKeywordInput);
             aiPublishButton.addEventListener('click', handleAIPublishPost);
             saveInstructionsButton.addEventListener('click', handleSaveInstructions);
@@ -563,10 +1153,39 @@
             manualCodeViewButton.addEventListener('click', showManualCodeView);
             manualResetButton.addEventListener('click', handleManualReset);
             stopButton.addEventListener('click', handleStopProcess);
+            resumeButton.addEventListener('click', handleResumeProcess);
+            pauseResumeBtn.addEventListener('click', handlePauseResume);
+            clearQueueBtn.addEventListener('click', handleClearQueue);
             tabs.addEventListener('click', handleTabClick);
-            topicIdeasList.addEventListener('change', updateSelectedTopicCount);
+            
+            if (autoRefreshToggle) {
+                autoRefreshToggle.addEventListener('change', handleAutoRefreshToggle);
+            }
+            if (manualRefreshBtn) {
+                manualRefreshBtn.addEventListener('click', () => extendSession(false));
+            }
+            
+            // 대량 예약 시작 날짜 변경 이벤트
+            bulkStartDateInput.addEventListener('change', updateBulkDateInfo);
+            
+            // 예약 설정 입력 변경 시 검증 (실시간)
+            scheduleTimesInput.addEventListener('input', () => {
+                validateScheduleSettings();
+                updateBulkDateInfo();
+            });
+            scheduleDaysInput.addEventListener('input', () => {
+                validateScheduleSettings();
+                updateBulkDateInfo();
+            });
+            
+            // 주제 선택 변경 시 검증 (실시간)
+            document.addEventListener('change', (e) => {
+                if (e.target.classList.contains('topic-checkbox')) {
+                    validateScheduleSettings();
+                    updateBulkDateInfo();
+                }
+            });
 
-            // 입력 값 보기/숨기기 토글 기능 추가
             document.querySelectorAll('[data-toggle-for]').forEach(button => {
                 button.addEventListener('click', () => {
                     const inputId = button.dataset.toggleFor;
@@ -582,7 +1201,966 @@
                     lucide.createIcons();
                 });
             });
+            
+            document.addEventListener('visibilitychange', handleVisibilityChange);
         };
+        
+        // === 🎯 블로그 선택 모달 관련 함수들 ===
+        
+        // 블로그 선택 모달 표시
+        async function showBlogSelectionModal() {
+            if (isProcessRunning) {
+                showStatusMessage('작업이 진행 중일 때는 블로그를 변경할 수 없습니다.', 'error');
+                return;
+            }
+            
+            blogSelectionModal.classList.add('active');
+            blogModalLoader.classList.remove('hidden');
+            blogModalList.innerHTML = '';
+            
+            try {
+                // 블로그 목록이 이미 있으면 재사용, 없으면 새로 가져오기
+                if (userBlogs.length === 0) {
+                    const data = await fetchWithAuth('https://www.googleapis.com/blogger/v3/users/self/blogs');
+                    userBlogs = data.items || [];
+                }
+                
+                renderBlogModalList(userBlogs);
+            } catch (error) {
+                blogModalList.innerHTML = `<div class="text-red-500 text-center p-4">블로그 목록을 불러올 수 없습니다: ${error.message}</div>`;
+            } finally {
+                blogModalLoader.classList.add('hidden');
+            }
+        }
+        
+        // 블로그 모달 목록 렌더링
+        function renderBlogModalList(blogs) {
+            if (blogs.length === 0) {
+                blogModalList.innerHTML = '<div class="text-center text-gray-500 p-4">소유한 블로그가 없습니다.</div>';
+                return;
+            }
+            
+            blogModalList.innerHTML = blogs.map(blog => {
+                const isCurrentBlog = blog.id === selectedBlogId;
+                return `
+                    <div class="blog-item ${isCurrentBlog ? 'current' : ''}" onclick="selectBlogFromModal('${blog.id}', '${blog.name.replace(/'/g, "\\'")}')">
+                        <h3 class="font-bold text-sm">${blog.name}</h3>
+                        <p class="text-xs text-gray-500 mt-1">${blog.url}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 모달에서 블로그 선택
+        window.selectBlogFromModal = function(blogId, blogName) {
+            if (blogId === selectedBlogId) {
+                closeBlogSelectionModal();
+                return;
+            }
+            
+            selectedBlogId = blogId;
+            selectedBlogName = blogName;
+            blogTitleEl.textContent = blogName;
+            
+            // 선택된 블로그에 맞는 글쓰기 지침 로드
+            WRITING_INSTRUCTIONS = localStorage.getItem(`bloggerInstructions_${selectedBlogId}`) || defaultInstructions;
+            writingInstructionsInput.value = WRITING_INSTRUCTIONS;
+            
+            // 예약된 글 목록 초기화 (새 블로그이므로)
+            scheduledPostTitles.clear();
+            scheduledPostTimes.clear();
+            
+            closeBlogSelectionModal();
+            showStatusMessage(`"${blogName}" 블로그로 변경되었습니다.`, 'success');
+            
+            // 예약된 글 탭이 활성화되어 있다면 새로고침
+            const activeTab = document.querySelector('.tab-button.active');
+            if (activeTab && activeTab.dataset.tab === 'scheduled-list') {
+                fetchScheduledPosts();
+            }
+        }
+        
+        // 블로그 선택 모달 닫기
+        window.closeBlogSelectionModal = function() {
+            blogSelectionModal.classList.remove('active');
+        }
+        
+        // 모달 배경 클릭 시 닫기
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-backdrop')) {
+                if (e.target.closest('#blog-selection-modal')) {
+                    closeBlogSelectionModal();
+                } else if (e.target.closest('#token-extend-modal')) {
+                    closeTokenModal();
+                }
+            }
+        });
+        
+        // 기본 날짜 설정
+        function setDefaultDates() {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            const formatDate = (date) => {
+                return date.getFullYear() + '-' + 
+                       String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+                       String(date.getDate()).padStart(2, '0');
+            };
+            
+            const formatDateTime = (date) => {
+                return date.getFullYear() + '-' + 
+                       String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+                       String(date.getDate()).padStart(2, '0') + 'T' +
+                       String(date.getHours()).padStart(2, '0') + ':' + 
+                       String(date.getMinutes()).padStart(2, '0');
+            };
+            
+            // 대량 예약 시작 날짜를 내일로 설정
+            if (bulkStartDateInput) {
+                bulkStartDateInput.value = formatDate(tomorrow);
+                updateBulkDateInfo();
+            }
+            
+            // 단일 포스팅 예약 시간도 내일 09:00으로 설정
+            if (aiPublishTimeInput) {
+                tomorrow.setHours(9, 0, 0, 0);
+                aiPublishTimeInput.value = formatDateTime(tomorrow);
+            }
+            
+            // 수동 포스팅 예약 시간도 내일 09:00으로 설정
+            if (manualPublishTimeInput) {
+                manualPublishTimeInput.value = formatDateTime(tomorrow);
+            }
+        }
+        
+        // 대량 예약 날짜 정보 업데이트
+        function updateBulkDateInfo() {
+            if (!bulkStartDateInput.value) return;
+            
+            const startDate = new Date(bulkStartDateInput.value);
+            const daysValue = parseInt(scheduleDaysInput.value, 10) || 1;
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + daysValue - 1);
+            
+            const formatDisplayDate = (date) => {
+                return date.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    weekday: 'short'
+                });
+            };
+            
+            const timesText = scheduleTimesInput.value.trim();
+            const times = timesText.split(',').map(t => t.trim()).filter(Boolean);
+            const postsPerDay = times.length;
+            
+            const selectedCheckboxes = topicIdeasList ? topicIdeasList.querySelectorAll('input[type="checkbox"]:checked') : [];
+            const selectedCount = selectedCheckboxes.length;
+            
+            let infoText = `📅 시작: ${formatDisplayDate(startDate)}\n📅 종료: ${formatDisplayDate(endDate)} (${daysValue}일간)`;
+            
+            if (postsPerDay > 0) {
+                infoText += `\n⏰ 매일 ${postsPerDay}회 발행 (${times.join(', ')})`;
+                infoText += `\n📝 총 예약 슬롯: ${postsPerDay * daysValue}개`;
+                
+                if (selectedCount > 0) {
+                    infoText += `\n✅ 선택된 주제: ${selectedCount}개`;
+                }
+            }
+            
+            bulkDateRange.textContent = infoText;
+            bulkDateInfo.classList.remove('hidden');
+        }
+        
+        // ===== 🎯 스마트 스케줄링 핵심 로직 (시작 날짜 반영) =====
+        
+        // 시간대별 예약 현황 가져오기
+        async function fetchScheduledPostsWithTimes() {
+            try {
+                currentStatusEl.textContent = '중복 날짜 체크 중입니다...';
+                addLog('🔍 기존 예약 현황을 확인하는 중...', 'info');
+                
+                const data = await fetchWithAuth(
+                    `https://www.googleapis.com/blogger/v3/blogs/${selectedBlogId}/posts?status=SCHEDULED&maxResults=500&fields=items(title,published)`
+                );
+                
+                scheduledPostTimes = new Map(); // 날짜별 시간대 저장
+                scheduledPostTitles = new Set(); // 제목 중복 체크용
+                
+                (data.items || []).forEach(post => {
+                    const publishDate = new Date(post.published);
+                    const dateKey = publishDate.toDateString();
+                    const timeKey = `${publishDate.getHours().toString().padStart(2, '0')}:${publishDate.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    if (!scheduledPostTimes.has(dateKey)) {
+                        scheduledPostTimes.set(dateKey, new Set());
+                    }
+                    scheduledPostTimes.get(dateKey).add(timeKey);
+                    scheduledPostTitles.add(post.title.toLowerCase());
+                });
+                
+                addLog(`✅ 기존 예약 현황 확인 완료 (${data.items?.length || 0}개 예약됨)`, 'success');
+                return scheduledPostTimes;
+            } catch (error) {
+                console.error('예약된 시간 목록 가져오기 실패:', error);
+                addLog('⚠️ 기존 예약 현황 확인 실패, 계속 진행합니다', 'warn');
+                return new Map();
+            }
+        }
+        
+        // 스마트 스케줄 생성 (충돌 시간 자동 건너뛰기, 시작 날짜 반영)
+        async function createSmartSchedule(selectedTopics, times, days, shouldGenerateImages, startDate = null) {
+            // 기존 예약 시간 가져오기
+            await fetchScheduledPostsWithTimes();
+            
+            const bulkQueue = [];
+            const now = new Date();
+            const baseDate = startDate ? new Date(startDate) : now;
+            let topicIndex = 0;
+            let skippedSlots = [];
+            
+            for (let dayOffset = 0; dayOffset < days && topicIndex < selectedTopics.length; dayOffset++) {
+                const currentDate = new Date(baseDate);
+                currentDate.setDate(currentDate.getDate() + dayOffset);
+                const dateKey = currentDate.toDateString();
+                
+                for (const timeStr of times) {
+                    if (topicIndex >= selectedTopics.length) break;
+                    
+                    const [hour, minute] = timeStr.split(':').map(Number);
+                    const publishDate = new Date(currentDate);
+                    publishDate.setHours(hour, minute, 0, 0);
+                    
+                    // 이미 예약된 시간인지 체크
+                    if (scheduledPostTimes.has(dateKey) && scheduledPostTimes.get(dateKey).has(timeStr)) {
+                        const skipInfo = {
+                            date: currentDate.toLocaleDateString('ko-KR'),
+                            time: timeStr,
+                            reason: '이미 예약됨',
+                            type: 'conflict'
+                        };
+                        skippedSlots.push(skipInfo);
+                        continue; // 이 시간대는 건너뛰기
+                    }
+                    
+                    // 과거 시간도 건너뛰기 (시작 날짜가 지정된 경우 제외)
+                    if (!startDate && publishDate <= now) {
+                        const skipInfo = {
+                            date: currentDate.toLocaleDateString('ko-KR'),
+                            time: timeStr,
+                            reason: '과거 시간',
+                            type: 'past'
+                        };
+                        skippedSlots.push(skipInfo);
+                        continue;
+                    }
+                    
+                    bulkQueue.push({
+                        topic: selectedTopics[topicIndex],
+                        publishDate: publishDate,
+                        generateImage: shouldGenerateImages
+                    });
+                    topicIndex++;
+                }
+            }
+            
+            return { bulkQueue, skippedSlots, processedTopics: topicIndex };
+        }
+        
+        // ===== 🎯 완벽한 예약 설정 검증 로직 (15개 = 15개, 100개 = 100개 정확 매칭) =====
+        function validateScheduleSettings() {
+            if (!topicIdeasList || !scheduleValidationMessage) return;
+            
+            const selectedCheckboxes = topicIdeasList.querySelectorAll('input[type="checkbox"]:checked');
+            const selectedCount = selectedCheckboxes.length;
+            const timesText = scheduleTimesInput.value.trim();
+            const daysValue = scheduleDaysInput.value.trim();
+            
+            // 입력값이 부족하면 메시지와 계산 표시 지우기
+            if (selectedCount === 0 || !timesText || !daysValue) {
+                scheduleValidationMessage.innerHTML = '';
+                scheduleCalculationDisplay.innerHTML = '';
+                return;
+            }
+            
+            // 시간 파싱 및 검증
+            const times = timesText.split(',').map(t => t.trim()).filter(Boolean);
+            if (times.length === 0) {
+                showValidationMessage('⚠️ 시간을 입력해주세요.', 'error');
+                scheduleCalculationDisplay.innerHTML = '';
+                return;
+            }
+            
+            // 시간 형식 검증 (HH:MM 또는 H:MM)
+            const invalidTimes = times.filter(t => !/^\d{1,2}:\d{2}$/.test(t));
+            if (invalidTimes.length > 0) {
+                showValidationMessage(`⚠️ 잘못된 시간 형식: ${invalidTimes.join(', ')} (예: 09:00, 17:00)`, 'error');
+                scheduleCalculationDisplay.innerHTML = '';
+                return;
+            }
+            
+            // 일수 파싱 및 검증
+            const days = parseInt(daysValue, 10);
+            if (isNaN(days) || days < 1) {
+                showValidationMessage('⚠️ 예약 기간은 1일 이상이어야 합니다.', 'error');
+                scheduleCalculationDisplay.innerHTML = '';
+                return;
+            }
+            
+            // ===== 🔥 핵심: 완벽한 매칭 계산 로직 =====
+            const postsPerDay = times.length;
+            const totalAvailableSlots = postsPerDay * days;
+            const exactDaysNeeded = Math.ceil(selectedCount / postsPerDay);
+            
+            // 실시간 계산 표시
+            showScheduleCalculation(selectedCount, postsPerDay, days, totalAvailableSlots, exactDaysNeeded);
+            
+            // 정확한 매칭 검증
+            if (totalAvailableSlots === selectedCount) {
+                // 🎯 완벽한 매칭 (15개 = 15개, 100개 = 100개)
+                showValidationMessage(`✅ 완벽합니다! ${selectedCount}개 주제가 ${days}일 동안 정확히 예약됩니다.`, 'success');
+            } else if (totalAvailableSlots < selectedCount) {
+                // 📉 슬롯 부족 (예: 15개 주제인데 12개 슬롯만 있음)
+                const shortage = selectedCount - totalAvailableSlots;
+                let message = `⚠️ ${selectedCount}개 주제를 모두 예약하려면 ${exactDaysNeeded}일이 필요합니다. 현재 ${days}일 설정으로는 ${totalAvailableSlots}개만 예약되고 ${shortage}개가 예약되지 않습니다.`;
+                message += `<br><button onclick="adjustDaysAutomatically(${exactDaysNeeded})" class="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">${exactDaysNeeded}일로 자동 수정</button>`;
+                showValidationMessage(message, 'warning');
+            } else {
+                // 📈 슬롯 과다 (예: 15개 주제인데 21개 슬롯 있음)
+                const excess = totalAvailableSlots - selectedCount;
+                let message = `❌ ${selectedCount}개 주제는 ${exactDaysNeeded}일이면 충분합니다. 현재 ${days}일로 설정되어 ${excess}개 슬롯이 초과됩니다.`;
+                message += `<br><button onclick="adjustDaysAutomatically(${exactDaysNeeded})" class="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">${exactDaysNeeded}일로 자동 수정</button>`;
+                showValidationMessage(message, 'error');
+            }
+        }
+        
+        // 실시간 매칭 계산 표시 함수
+        function showScheduleCalculation(selectedCount, postsPerDay, days, totalSlots, exactDaysNeeded) {
+            let calculationType = '';
+            let calculationClass = '';
+            
+            if (totalSlots === selectedCount) {
+                calculationType = '🎯 완벽한 매칭';
+                calculationClass = 'calculation-perfect';
+            } else if (totalSlots < selectedCount) {
+                calculationType = '📉 슬롯 부족';
+                calculationClass = 'calculation-shortage';
+            } else {
+                calculationType = '📈 슬롯 과다';
+                calculationClass = 'calculation-excess';
+            }
+            
+            scheduleCalculationDisplay.innerHTML = `
+                <div class="matching-calculation ${calculationClass}">
+                    <div class="font-bold mb-1">${calculationType}</div>
+                    <div class="text-xs space-y-1">
+                        <div>• 선택한 주제: <strong>${selectedCount}개</strong></div>
+                        <div>• 하루 발행 횟수: <strong>${postsPerDay}회</strong> (${scheduleTimesInput.value.trim()})</div>
+                        <div>• 예약 기간: <strong>${days}일</strong></div>
+                        <div>• 총 사용 가능한 슬롯: <strong>${totalSlots}개</strong> (${postsPerDay} × ${days})</div>
+                        <div>• 최적 필요 일수: <strong>${exactDaysNeeded}일</strong></div>
+                        ${totalSlots !== selectedCount ? `<div class="mt-1 pt-1 border-t border-gray-300">• 차이: <strong>${Math.abs(totalSlots - selectedCount)}개</strong> ${totalSlots > selectedCount ? '초과' : '부족'}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 검증 메시지 표시 함수
+        function showValidationMessage(message, type) {
+            const iconMap = {
+                'success': 'check-circle',
+                'warning': 'alert-triangle', 
+                'error': 'x-circle'
+            };
+            
+            scheduleValidationMessage.innerHTML = `
+                <div class="validation-message validation-${type}">
+                    <i data-lucide="${iconMap[type]}" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+            
+            lucide.createIcons();
+        }
+        
+        // 일수 자동 조정 함수
+        window.adjustDaysAutomatically = function(days) {
+            scheduleDaysInput.value = days;
+            validateScheduleSettings(); // 즉시 재검증
+            updateBulkDateInfo(); // 날짜 정보 업데이트
+            updateSchedulePreviewIfVisible();
+            
+            // 사용자에게 피드백
+            showStatusMessage(`📅 예약 기간이 ${days}일로 자동 조정되었습니다.`, 'success');
+        }
+        
+        // 전체 선택 / 해제 함수 분리
+        function handleSelectAllTopics() {
+            const checkboxes = topicIdeasList.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = true;
+                cb.closest('li').classList.add('selected');
+            });
+            updateSelectedTopicCount();
+            validateScheduleSettings(); // 실시간 검증
+            updateBulkDateInfo(); // 날짜 정보 업데이트
+        }
+        
+        function handleDeselectAllTopics() {
+            const checkboxes = topicIdeasList.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+                cb.closest('li').classList.remove('selected');
+            });
+            updateSelectedTopicCount();
+            validateScheduleSettings(); // 실시간 검증
+            updateBulkDateInfo(); // 날짜 정보 업데이트
+        }
+        
+        // --- 예약 일정 미리보기 함수들 (스마트 버전, 시작 날짜 반영) ---
+        async function handlePreviewSchedule() {
+            const selectedCheckboxes = Array.from(topicIdeasList.querySelectorAll('input[type="checkbox"]:checked'));
+            const selectedTopics = selectedCheckboxes.map(cb => cb.value);
+            const timesText = scheduleTimesInput.value.trim();
+            const daysValue = scheduleDaysInput.value.trim();
+            const startDate = bulkStartDateInput.value;
+            
+            if (selectedTopics.length === 0) {
+                showStatusMessage('예약할 주제를 선택해주세요.', 'error');
+                return;
+            }
+            
+            const times = timesText.split(',').map(t => t.trim()).filter(Boolean);
+            if (times.length === 0 || !times.every(t => /^\d{1,2}:\d{2}$/.test(t))) {
+                showStatusMessage('올바른 시간 형식을 입력해주세요. (예: 09:00, 17:00)', 'error');
+                return;
+            }
+            
+            const days = parseInt(daysValue, 10);
+            if (isNaN(days) || days < 1) {
+                showStatusMessage('예약 기간은 1일 이상이어야 합니다.', 'error');
+                return;
+            }
+            
+            if (!startDate) {
+                showStatusMessage('시작 날짜를 선택해주세요.', 'error');
+                return;
+            }
+            
+            // 스마트 스케줄링으로 미리보기 생성
+            await generateSchedulePreviewSmart(selectedTopics, times, days, startDate);
+            schedulePreviewContainer.classList.remove('hidden');
+        }
+        
+        async function generateSchedulePreviewSmart(topics, times, days, startDateStr) {
+            const startDate = new Date(startDateStr);
+            let html = '';
+            
+            // 기존 예약 정보 가져오기
+            await fetchScheduledPostsWithTimes();
+            
+            let topicIndex = 0;
+            let totalScheduled = 0;
+            let conflictCount = 0;
+            let pastCount = 0;
+            
+            const postsPerDay = times.length;
+            const totalSlots = postsPerDay * days;
+            const exactDaysNeeded = Math.ceil(topics.length / postsPerDay);
+            
+            // 검증 메시지 (미리보기용)
+            if (totalSlots !== topics.length) {
+                if (totalSlots < topics.length) {
+                    html += `<div class="bg-yellow-100 text-yellow-800 p-2 rounded mb-2 text-sm">
+                        ⚠️ ${topics.length}개 주제 중 ${totalSlots}개만 예약됩니다.
+                        <br>모든 주제를 예약하려면 ${exactDaysNeeded}일이 필요합니다.
+                    </div>`;
+                } else {
+                    html += `<div class="bg-red-100 text-red-800 p-2 rounded mb-2 text-sm">
+                        ❌ ${topics.length}개 주제는 ${exactDaysNeeded}일이면 충분합니다.
+                        <br>현재 ${days}일로 설정되어 ${days - exactDaysNeeded}일이 초과됩니다.
+                    </div>`;
+                }
+            }
+            
+            // 예약 일정 생성 (스마트 충돌 감지)
+            for (let dayOffset = 0; dayOffset < days && topicIndex < topics.length; dayOffset++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(currentDate.getDate() + dayOffset);
+                const dateKey = currentDate.toDateString();
+                const dateStr = currentDate.toLocaleDateString('ko-KR', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    weekday: 'short'
+                });
+                
+                for (const timeStr of times) {
+                    if (topicIndex >= topics.length) break;
+                    
+                    const [hour, minute] = timeStr.split(':').map(Number);
+                    const publishDate = new Date(currentDate);
+                    publishDate.setHours(hour, minute, 0, 0);
+                    
+                    // 충돌 체크
+                    const isConflict = scheduledPostTimes.has(dateKey) && scheduledPostTimes.get(dateKey).has(timeStr);
+                    const now = new Date();
+                    const isPastTime = publishDate <= now;
+                    
+                    if (isConflict) {
+                        html += `<div class="schedule-preview-item conflict">
+                            <span class="line-through">${dateStr} ${timeStr}</span> - 
+                            <span class="font-bold">[예약됨] 건너뛰기</span>
+                        </div>`;
+                        conflictCount++;
+                        continue;
+                    }
+                    
+                    if (isPastTime) {
+                        html += `<div class="schedule-preview-item skipped">
+                            <span class="line-through">${dateStr} ${timeStr}</span> - 
+                            <span class="font-bold">[과거] 건너뛰기</span>
+                        </div>`;
+                        pastCount++;
+                        continue;
+                    }
+                    
+                    totalScheduled++;
+                    html += `<div class="schedule-preview-item">
+                        <strong>${dateStr} ${timeStr}</strong> - ${topics[topicIndex].substring(0, 30)}${topics[topicIndex].length > 30 ? '...' : ''}
+                    </div>`;
+                    topicIndex++;
+                }
+            }
+            
+            // 스마트 요약 정보
+            const smartSummaryHtml = `
+                <div class="smart-schedule-info">
+                    <div class="font-bold mb-2">🧠 스마트 스케줄링 결과:</div>
+                    <div class="text-xs space-y-1">
+                        <div>• 시작 날짜: <strong>${startDate.toLocaleDateString('ko-KR')}</strong></div>
+                        <div>• 선택한 주제: <strong>${topics.length}개</strong></div>
+                        <div>• 실제 예약: <strong>${totalScheduled}개</strong></div>
+                        ${conflictCount > 0 ? `<div class="text-red-600">• 기존 예약과 충돌: <strong>${conflictCount}개</strong> (자동 건너뛰기)</div>` : ''}
+                        ${pastCount > 0 ? `<div class="text-yellow-600">• 과거 시간: <strong>${pastCount}개</strong> (자동 건너뛰기)</div>` : ''}
+                        ${totalScheduled > 0 ? `<div class="text-green-600">• 성공적으로 예약 가능: <strong>${totalScheduled}개</strong></div>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            if (totalScheduled === 0) {
+                html = smartSummaryHtml + '<div class="text-center text-gray-500 mt-4">예약 가능한 일정이 없습니다.</div>';
+            } else {
+                html = smartSummaryHtml + html;
+            }
+            
+            schedulePreview.innerHTML = html;
+        }
+        
+        function updateSchedulePreviewIfVisible() {
+            if (!schedulePreviewContainer.classList.contains('hidden')) {
+                handlePreviewSchedule();
+            }
+        }
+        
+        // --- 실시간 시계 함수 ---
+        function startRealtimeClock() {
+            if (realtimeClockInterval) {
+                clearInterval(realtimeClockInterval);
+            }
+            
+            const updateClock = () => {
+                const now = new Date();
+                const timeString = now.toLocaleString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+                
+                if (realtimeClockEl) {
+                    realtimeClockEl.textContent = `🕐 ${timeString}`;
+                }
+            };
+            
+            updateClock();
+            realtimeClockInterval = setInterval(updateClock, 1000);
+        }
+        
+        // --- 다음 포스팅 시간 표시 (1초 단위 업데이트) ---
+        function updateNextPostingTime() {
+            if (bulkScheduleQueue.length === 0 || !bulkScheduleQueue[0].publishDate) {
+                if (nextPostingTimeEl) {
+                    nextPostingTimeEl.textContent = '';
+                }
+                return;
+            }
+            
+            const nextJob = bulkScheduleQueue[0];
+            const nextTime = new Date(nextJob.publishDate);
+            const now = new Date();
+            const diff = nextTime - now;
+            
+            if (diff > 0) {
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                const timeString = nextTime.toLocaleString('ko-KR', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+                
+                let remainingText = '';
+                if (days > 0) {
+                    remainingText = `${days}일 ${hours}시간 ${minutes}분 ${seconds}초 후`;
+                } else if (hours > 0) {
+                    remainingText = `${hours}시간 ${minutes}분 ${seconds}초 후`;
+                } else if (minutes > 0) {
+                    remainingText = `${minutes}분 ${seconds}초 후`;
+                } else {
+                    remainingText = `${seconds}초 후`;
+                }
+                
+                if (nextPostingTimeEl) {
+                    nextPostingTimeEl.innerHTML = `⏰ 다음 예약: <span class="precise-timer">${timeString}</span> (${remainingText})`;
+                }
+            }
+        }
+        
+        // --- 큐 관리 함수들 ---
+        function updateQueueStatus() {
+            const totalInQueue = bulkScheduleQueue.length;
+            if (totalInQueue > 0 || isProcessPaused) {
+                queueStatus.classList.remove('hidden');
+                queueInfo.textContent = `대기 중인 작업: ${totalInQueue}개 ${isProcessPaused ? '(일시정지)' : ''}`;
+                
+                if (nextPostingTimeInterval) {
+                    clearInterval(nextPostingTimeInterval);
+                }
+                updateNextPostingTime();
+                nextPostingTimeInterval = setInterval(updateNextPostingTime, 1000); // 1초마다 업데이트
+            } else {
+                queueStatus.classList.add('hidden');
+                if (nextPostingTimeInterval) {
+                    clearInterval(nextPostingTimeInterval);
+                }
+            }
+        }
+        
+        function handlePauseResume() {
+            if (isProcessPaused) {
+                isProcessPaused = false;
+                pauseResumeBtn.innerHTML = '<i data-lucide="pause" class="w-4 h-4 inline"></i> 일시정지';
+                addLog('⏯️ 작업을 재개합니다', 'info');
+                progressBar.classList.remove('paused');
+                
+                if (pausedQueue.length > 0) {
+                    bulkScheduleQueue = [...pausedQueue, ...bulkScheduleQueue];
+                    pausedQueue = [];
+                    processBulkScheduleQueue();
+                }
+            } else {
+                isProcessPaused = true;
+                pauseResumeBtn.innerHTML = '<i data-lucide="play" class="w-4 h-4 inline"></i> 재개';
+                addLog('⏸️ 작업을 일시정지합니다', 'warn');
+                progressBar.classList.add('paused');
+                currentStatusEl.classList.add('paused-indicator');
+            }
+            updateQueueStatus();
+            lucide.createIcons();
+        }
+        
+        function handleClearQueue() {
+            if (bulkScheduleQueue.length === 0) {
+                showStatusMessage('대기 중인 작업이 없습니다', 'info');
+                return;
+            }
+            
+            if (confirm(`대기 중인 ${bulkScheduleQueue.length}개의 작업을 모두 취소하시겠습니까?`)) {
+                const clearedCount = bulkScheduleQueue.length;
+                bulkScheduleQueue = [];
+                pausedQueue = [];
+                updateQueueStatus();
+                addLog(`🗑️ ${clearedCount}개의 대기 작업이 취소되었습니다`, 'warn');
+                showStatusMessage(`${clearedCount}개의 작업이 취소되었습니다`, 'info');
+            }
+        }
+        
+        // --- 작업 중지/재개 함수들 ---
+        function handleStopProcess() {
+            if (!confirm('진행 중인 작업을 완전히 중지하시겠습니까?\n(재개하려면 처음부터 다시 시작해야 합니다)')) {
+                return;
+            }
+            
+            isProcessRunning = false;
+            isProcessPaused = false;
+            bulkScheduleQueue = [];
+            pausedQueue = [];
+            
+            if (waitingInterval) {
+                clearInterval(waitingInterval);
+                waitingInterval = null;
+            }
+            
+            const message = completedBulkJobs > 0 
+                ? `작업이 중지되었습니다. (${completedBulkJobs}/${totalBulkJobs}개 완료)`
+                : '작업이 중지되었습니다.';
+            
+            addLog(message, 'error');
+            updateProgress((completedBulkJobs / (totalBulkJobs || 1)) * 100, message);
+            
+            setPublishButtonState(false, 'bulk');
+            currentStatusEl.textContent = '작업 중지됨';
+            currentStatusEl.classList.remove('paused-indicator');
+            progressBar.classList.add('error');
+            progressBar.classList.remove('paused');
+            
+            updateQueueStatus();
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            stopButton.classList.add('hidden');
+            resumeButton.classList.add('hidden');
+        }
+        
+        function handleResumeProcess() {
+            if (pausedQueue.length === 0 && bulkScheduleQueue.length === 0) {
+                showStatusMessage('재개할 작업이 없습니다', 'info');
+                return;
+            }
+            
+            isProcessRunning = true;
+            isProcessPaused = false;
+            
+            addLog('▶️ 작업을 재개합니다', 'info');
+            progressBar.classList.remove('paused', 'error');
+            currentStatusEl.classList.remove('paused-indicator');
+            
+            stopButton.classList.remove('hidden');
+            resumeButton.classList.add('hidden');
+            
+            if (pausedQueue.length > 0) {
+                bulkScheduleQueue = [...pausedQueue, ...bulkScheduleQueue];
+                pausedQueue = [];
+            }
+            
+            updateQueueStatus();
+            processBulkScheduleQueue();
+        }
+        
+        // --- 토큰 관리 함수들 ---
+        function updateAutoRefreshStatus() {
+            if (autoRefreshStatus) {
+                autoRefreshStatus.textContent = isAutoRefreshEnabled ? '켬' : '끔';
+                autoRefreshStatus.style.color = isAutoRefreshEnabled ? '#22c55e' : '#ef4444';
+            }
+            
+            updateTokenExplanation();
+        }
+        
+        function updateTokenExplanation() {
+            if (!tokenExplanation) return;
+            
+            if (isAutoRefreshEnabled) {
+                tokenExplanation.innerHTML = '🟢 <strong>자동 연장 켜짐</strong>: 세션이 만료되기 10분 전에 자동으로 연장됩니다.';
+            } else {
+                tokenExplanation.innerHTML = '🔴 <strong>자동 연장 꺼짐</strong>: 세션 만료 5분 전에 알림이 표시됩니다. "연장" 버튼으로 수동 연장 가능.';
+            }
+        }
+        
+        function startTokenCountdown() {
+            if (tokenCountdownInterval) {
+                clearInterval(tokenCountdownInterval);
+            }
+            
+            tokenStatusBar.classList.remove('hidden');
+            
+            tokenCountdownInterval = setInterval(() => {
+                updateTokenDisplay();
+            }, 1000);
+            
+            updateTokenDisplay();
+            setupTokenWarning();
+            
+            if (isAutoRefreshEnabled) {
+                setupAutoRefresh();
+            }
+        }
+        
+        function updateTokenDisplay() {
+            if (!tokenExpiryTime) return;
+            
+            const now = Date.now();
+            const remaining = tokenExpiryTime - now;
+            
+            if (remaining <= 0) {
+                clearInterval(tokenCountdownInterval);
+                tokenTimer.textContent = '00:00';
+                tokenProgress.style.width = '0%';
+                tokenProgress.style.backgroundColor = '#ef4444';
+                showTokenExpiredAlert();
+                return;
+            }
+            
+            const totalDuration = TOKEN_DURATION;
+            const percentRemaining = (remaining / totalDuration) * 100;
+            
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            tokenTimer.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            tokenProgress.style.width = `${percentRemaining}%`;
+            
+            if (remaining <= TOKEN_WARNING_TIME) {
+                tokenProgress.style.backgroundColor = '#ef4444';
+                tokenTimer.classList.add('token-warning');
+            } else if (remaining <= TOKEN_AUTO_REFRESH_TIME) {
+                tokenProgress.style.backgroundColor = '#f59e0b';
+                tokenTimer.classList.remove('token-warning');
+            } else {
+                tokenProgress.style.backgroundColor = '#ffffff';
+                tokenTimer.classList.remove('token-warning');
+            }
+        }
+        
+        function setupTokenWarning() {
+            if (tokenWarningTimer) {
+                clearTimeout(tokenWarningTimer);
+            }
+            
+            const timeUntilWarning = tokenExpiryTime - Date.now() - TOKEN_WARNING_TIME;
+            
+            if (timeUntilWarning > 0) {
+                tokenWarningTimer = setTimeout(() => {
+                    if (!isAutoRefreshEnabled) {
+                        showTokenWarningModal();
+                    }
+                }, timeUntilWarning);
+            }
+        }
+        
+        function setupAutoRefresh() {
+            if (tokenRefreshTimer) {
+                clearTimeout(tokenRefreshTimer);
+            }
+            
+            const timeUntilRefresh = tokenExpiryTime - Date.now() - TOKEN_AUTO_REFRESH_TIME;
+            
+            if (timeUntilRefresh > 0) {
+                tokenRefreshTimer = setTimeout(() => {
+                    if (isAutoRefreshEnabled && !isRefreshing) {
+                        console.log('자동 토큰 갱신 시작...');
+                        extendSession(true);
+                    }
+                }, timeUntilRefresh);
+            }
+        }
+        
+        function handleAutoRefreshToggle() {
+            isAutoRefreshEnabled = autoRefreshToggle.checked;
+            localStorage.setItem('autoRefreshToken', isAutoRefreshEnabled);
+            
+            updateAutoRefreshStatus();
+            
+            if (isAutoRefreshEnabled) {
+                setupAutoRefresh();
+                showStatusMessage('자동 연장이 활성화되었습니다. 세션이 자동으로 유지됩니다.', 'success');
+            } else {
+                if (tokenRefreshTimer) {
+                    clearTimeout(tokenRefreshTimer);
+                }
+                showStatusMessage('자동 연장이 비활성화되었습니다. 세션 만료 전 수동으로 연장해주세요.', 'info');
+            }
+        }
+        
+        function extendSession(isAuto = false) {
+            if (!tokenClient) {
+                console.error('토큰 클라이언트가 초기화되지 않았습니다.');
+                return;
+            }
+            
+            if (isRefreshing) {
+                console.log('이미 토큰 갱신 중입니다.');
+                return;
+            }
+            
+            isRefreshing = true;
+            
+            tokenClient.requestAccessToken({ prompt: '' });
+            
+            if (!isAuto) {
+                closeTokenModal();
+                showStatusMessage('세션을 연장하는 중...', 'info');
+            } else {
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                notification.innerHTML = '🔄 세션이 자동으로 연장되었습니다';
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+        }
+        
+        function showTokenWarningModal() {
+            tokenExtendModal.classList.remove('hidden');
+            
+            const modalInterval = setInterval(() => {
+                if (!tokenExpiryTime) {
+                    clearInterval(modalInterval);
+                    return;
+                }
+                
+                const remaining = tokenExpiryTime - Date.now();
+                if (remaining <= 0) {
+                    clearInterval(modalInterval);
+                    closeTokenModal();
+                    return;
+                }
+                
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                modalTimeRemaining.textContent = `${minutes}분 ${seconds}초`;
+            }, 1000);
+        }
+        
+        window.closeTokenModal = function() {
+            tokenExtendModal.classList.add('hidden');
+        }
+        
+        function showTokenExpiredAlert() {
+            showStatusMessage('세션이 만료되었습니다. 다시 로그인해주세요.', 'error');
+            setTimeout(() => {
+                handleLogout();
+            }, 2000);
+        }
+        
+        function handleVisibilityChange() {
+            if (!document.hidden && accessToken && tokenExpiryTime) {
+                const remaining = tokenExpiryTime - Date.now();
+                
+                if (remaining <= 0) {
+                    showTokenExpiredAlert();
+                } else if (remaining <= TOKEN_WARNING_TIME && !isAutoRefreshEnabled) {
+                    showTokenWarningModal();
+                }
+                
+                updateTokenDisplay();
+            }
+        }
 
         function showView(viewName) {
             settingsView.style.display = 'none';
@@ -645,20 +2223,65 @@
         }
         
         function handleTokenResponse(response) {
+            isRefreshing = false;
+            
             if (response.error) {
-                showStatusMessage('인증에 실패했습니다: ' + response.error, 'error');
-                return;
+                if (response.error === 'popup_closed_by_user') {
+                    showStatusMessage('로그인이 취소되었습니다.', 'warn');
+                } else {
+                    showStatusMessage('인증에 실패했습니다: ' + response.error, 'error');
+                }
+                
+                if (accessToken) {
+                    return;
+                } else {
+                    showView('settings');
+                    return;
+                }
             }
+            
+            const wasLoggedIn = !!accessToken;
             accessToken = response.access_token;
-            showView('blog-selection');
-            fetchUserBlogs();
+            
+            const expiresIn = response.expires_in || 3600;
+            tokenExpiryTime = Date.now() + (expiresIn * 1000);
+            
+            startTokenCountdown();
+            
+            if (wasLoggedIn) {
+                const minutes = Math.floor((tokenExpiryTime - Date.now()) / 60000);
+                showStatusMessage(`✅ 세션이 ${minutes}분 연장되었습니다.`, 'success');
+            } else {
+                showView('blog-selection');
+                fetchUserBlogs();
+            }
         }
         
         function handleLogout() {
+            if (tokenCountdownInterval) {
+                clearInterval(tokenCountdownInterval);
+            }
+            if (tokenRefreshTimer) {
+                clearTimeout(tokenRefreshTimer);
+            }
+            if (tokenWarningTimer) {
+                clearTimeout(tokenWarningTimer);
+            }
+            if (realtimeClockInterval) {
+                clearInterval(realtimeClockInterval);
+            }
+            if (nextPostingTimeInterval) {
+                clearInterval(nextPostingTimeInterval);
+            }
+            
             if (accessToken) {
                 google.accounts.oauth2.revoke(accessToken, () => {
                     accessToken = null;
                     selectedBlogId = null;
+                    selectedBlogName = null;
+                    userBlogs = [];
+                    tokenExpiryTime = null;
+                    isRefreshing = false;
                     showView('settings');
                 });
             }
@@ -666,22 +2289,63 @@
 
         // --- API 호출 (Blogger) ---
         async function fetchWithAuth(url, options = {}) {
+            if (tokenExpiryTime && Date.now() >= tokenExpiryTime - 60000) {
+                console.log('토큰이 곧 만료됩니다. 갱신 중...');
+                await new Promise((resolve) => {
+                    extendSession(true);
+                    setTimeout(resolve, 2000);
+                });
+            }
+            
             if (!accessToken) throw new Error('인증 토큰이 없습니다.');
+            
             const headers = {
                 ...options.headers,
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
             };
-            const response = await fetch(url, { ...options, headers });
-            if (response.status === 401) {
-                handleLogout();
-                throw new Error('인증이 만료되었습니다.');
+            
+            try {
+                const response = await fetch(url, { ...options, headers });
+                
+                if (response.status === 401) {
+                    console.log('401 에러 감지, 토큰 갱신 시도...');
+                    extendSession(true);
+                    
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    if (accessToken) {
+                        const retryHeaders = {
+                            ...options.headers,
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        };
+                        const retryResponse = await fetch(url, { ...options, headers: retryHeaders });
+                        
+                        if (retryResponse.status === 401) {
+                            handleLogout();
+                            throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
+                        }
+                        
+                        if (!retryResponse.ok) {
+                            const errorData = await retryResponse.json();
+                            throw new Error(errorData.error.message || `HTTP error! status: ${retryResponse.status}`);
+                        }
+                        
+                        return retryResponse.json();
+                    }
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                return response.json();
+            } catch (error) {
+                console.error('API 요청 실패:', error);
+                throw error;
             }
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error.message || `HTTP error! status: ${response.status}`);
-            }
-            return response.json();
         }
 
         async function fetchUserBlogs() {
@@ -689,7 +2353,8 @@
             blogList.innerHTML = '';
             try {
                 const data = await fetchWithAuth('https://www.googleapis.com/blogger/v3/users/self/blogs');
-                renderBlogList(data.items || []);
+                userBlogs = data.items || []; // 블로그 목록 저장
+                renderBlogList(userBlogs);
             } catch (error) {
                 showStatusMessage(`블로그 목록 로드 실패: ${error.message}`, 'error');
                 settingsErrorEl.textContent = `블로그 목록 로드 실패: ${error.message}`;
@@ -712,8 +2377,9 @@
             `).join('');
         }
 
-        function selectBlog(blogId, blogName) {
+        window.selectBlog = function(blogId, blogName) {
             selectedBlogId = blogId;
+            selectedBlogName = blogName;
             blogTitleEl.textContent = blogName;
             WRITING_INSTRUCTIONS = localStorage.getItem(`bloggerInstructions_${selectedBlogId}`) || defaultInstructions;
             writingInstructionsInput.value = WRITING_INSTRUCTIONS;
@@ -750,20 +2416,17 @@
         function processLabels(labels) {
             if (!labels || labels.length === 0) return [];
             
-            // 각 라벨을 20자로 제한
             let processedLabels = labels.map(label => {
                 const trimmed = label.trim();
                 return trimmed.length > 20 ? trimmed.substring(0, 20) : trimmed;
             });
             
-            // 전체 라벨 문자열이 150자를 넘지 않도록 조정
             let totalLength = processedLabels.join(',').length;
             while (totalLength > 150 && processedLabels.length > 1) {
-                processedLabels.pop(); // 마지막 라벨부터 제거
+                processedLabels.pop();
                 totalLength = processedLabels.join(',').length;
             }
             
-            // 그래도 150자를 넘으면 첫 번째 라벨만 잘라서 사용
             if (totalLength > 150 && processedLabels.length === 1) {
                 const maxLength = 150;
                 processedLabels[0] = processedLabels[0].substring(0, maxLength);
@@ -775,7 +2438,6 @@
         // --- Pollinations.ai 이미지 생성 (한글 프롬프트를 영어로 번역) ---
         async function translateToEnglish(koreanText) {
             try {
-                // Gemini를 사용하여 한글을 영어로 번역
                 const translatePrompt = `Translate the following Korean text to English for image generation. Provide only the English translation without any explanation:
                 "${koreanText}"`;
                 
@@ -798,14 +2460,12 @@
                 return englishText;
             } catch (error) {
                 console.error('번역 실패:', error);
-                // 번역 실패 시 기본 영어 프롬프트 반환
                 return 'blog post image';
             }
         }
 
         async function generatePollinationsImage(prompt) {
             try {
-                // 한글인지 확인 (한글이 포함되어 있으면 번역)
                 const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(prompt);
                 let englishPrompt = prompt;
                 
@@ -814,27 +2474,21 @@
                     englishPrompt = await translateToEnglish(prompt);
                 }
                 
-                // 프롬프트 개선 (영어로)
                 const enhancedPrompt = `${englishPrompt}, professional photography, high quality, detailed, 8k resolution, beautiful lighting, vibrant colors`;
-                
-                // URL 인코딩
                 const encodedPrompt = encodeURIComponent(enhancedPrompt);
                 
-                // 고유 seed로 매번 다른 이미지
                 const seed = Date.now() + Math.floor(Math.random() * 10000);
                 
-                // Pollinations URL 생성
                 const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1200&height=800&nologo=true&seed=${seed}`;
                 
                 console.log('Pollinations 이미지 URL:', imageUrl);
-                addLog('✅ Pollinations AI 이미지 생성 완료', 'success');
+                addLog('✅ 이미지 생성 완료', 'success');
                 
                 return imageUrl;
             } catch (error) {
                 console.error('Pollinations 이미지 생성 실패:', error);
                 addLog('⚠️ 이미지 생성 실패, 기본 이미지 사용', 'warn');
                 
-                // 폴백 이미지
                 const fallbackSeed = Date.now();
                 return `https://image.pollinations.ai/prompt/beautiful%20blog%20image?width=1200&height=800&nologo=true&seed=${fallbackSeed}`;
             }
@@ -857,14 +2511,11 @@
                     .trim();
             }
             
-            // h1 태그 제거 (제목 중복 방지)
             cleanedContent = cleanedContent.replace(/<h1[^>]*>.*?<\/h1>/gi, '');
             
-            // 태그 관련 내용 제거
             cleanedContent = cleanedContent.replace(/<(div|p|section|aside)[^>]*>\s*(태그|관련 태그|TAGS)\s*:[\s\S]*?<\/\1>/gi, '');
             cleanedContent = cleanedContent.replace(/^\s*(태그|관련 태그|TAGS)\s*:.*$/gim, '');
             
-            // 첫 번째 h2/h3 제거 (있을 경우)
             cleanedContent = cleanedContent.replace(/^<h[2-3]>.+?<\/[hH][2-3]>/, '').trim();
 
             return cleanedContent.trim();
@@ -876,6 +2527,17 @@
 
             for (let i = 0; i < maxRetries; i++) {
                  if (!isProcessRunning) throw new Error('작업 중지됨');
+                 if (isProcessPaused) {
+                     await new Promise(resolve => {
+                         const checkPause = setInterval(() => {
+                             if (!isProcessPaused) {
+                                 clearInterval(checkPause);
+                                 resolve();
+                             }
+                         }, 1000);
+                     });
+                 }
+                 
                 try {
                     const response = await fetch(url, {
                         method: 'POST',
@@ -968,7 +2630,7 @@
                     const keyword = keywords[i];
                     if (!isProcessRunning) throw new Error('작업 중지됨');
                     updateProgress((i / keywords.length) * 100, `"${keyword}" 키워드로 주제 생성 중...`);
-                    const prompt = `당신은 SEO 전문가이자 콘텐츠 전략가입니다. 핵심 키워드 "${keyword}"(을)를 바탕으로, 구글 검색에 최적화되고 사용자의 흥미를 끌 만한 블로그 글 주제 10~15가지를 생성해주세요. 각 주제는 이전 주제와 중복되지 않아야 하며, 구체적이고 매력적이어야 합니다. **매우 중요: 서론이나 번호 없이, 오직 각 주제를 줄바꿈으로 구분한 목록만 제공해주세요.**`;
+                                       const prompt = `당신은 SEO 전문가이자 콘텐츠 전략가입니다. 핵심 키워드 "${keyword}"(을)를 바탕으로, 구글 검색에 최적화되고 사용자의 흥미를 끌 만한 블로그 글 주제 10~15가지를 생성해주세요. 각 주제는 이전 주제와 중복되지 않아야 하며, 구체적이고 매력적이어야 합니다. **매우 중요: 서론이나 번호 없이, 오직 각 주제를 줄바꿈으로 구분한 목록만 제공해주세요.**`;
                     const topicsText = await geminiFetch('gemini-2.5-flash-preview-05-20', prompt);
                     const topics = topicsText.split('\n').filter(t => {
                         const trimmed = t.trim();
@@ -999,37 +2661,59 @@
         }
 
         function renderTopicIdeas(topics) {
+            if (totalTopicCountEl) {
+                totalTopicCountEl.textContent = topics.length;
+            }
+            
             topicIdeasList.innerHTML = topics.map((topic, index) => `
-                <li class="p-2 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
+                <li class="topic-item p-2 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
                     <div class="flex items-center flex-grow mr-2">
-                        <input type="checkbox" id="topic-${index}" value="${topic}" class="mr-3 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <input type="checkbox" id="topic-${index}" value="${topic.replace(/"/g, '&quot;')}" class="topic-checkbox mr-3 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                         <label for="topic-${index}" class="text-sm w-full cursor-pointer">${topic}</label>
                     </div>
-                    <button onclick="selectTopicForSinglePosting('${topic.replace(/'/g, "\\'")}')" class="p-1 text-gray-500 hover:text-blue-600 flex-shrink-0" title="이 주제로 단일 포스팅하기">
+                    <button onclick="selectTopicForSinglePosting('${topic.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" class="p-1 text-gray-500 hover:text-blue-600 flex-shrink-0" title="이 주제로 단일 포스팅하기">
                         <i data-lucide="send" class="w-4 h-4"></i>
                     </button>
                 </li>
             `).join('');
+            
+            topicIdeasList.querySelectorAll('.topic-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const listItem = this.closest('li');
+                    if (this.checked) {
+                        listItem.classList.add('selected');
+                    } else {
+                        listItem.classList.remove('selected');
+                    }
+                    updateSelectedTopicCount();
+                    validateScheduleSettings(); // 실시간 검증
+                    updateBulkDateInfo(); // 날짜 정보 업데이트
+                });
+            });
+            
             updateSelectedTopicCount();
             lucide.createIcons();
         }
 
-        function selectTopicForSinglePosting(topic) {
-            postTopicInput.value = topic;
+        window.selectTopicForSinglePosting = function(topic) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = topic;
+            const decodedTopic = textarea.value;
+            
+            postTopicInput.value = decodedTopic;
             handleTabClick({ target: document.querySelector('[data-tab="ai-single-mode"]') });
             postingView.scrollTop = 0;
         }
         
         function updateSelectedTopicCount() {
-            const selectedCount = topicIdeasList.querySelectorAll('input[type="checkbox"]:checked').length;
+            const selectedCheckboxes = topicIdeasList.querySelectorAll('input[type="checkbox"]:checked');
+            const selectedCount = selectedCheckboxes.length;
             selectedTopicCountEl.textContent = selectedCount;
-        }
-
-        function handleSelectAllTopics() {
-            const checkboxes = topicIdeasList.querySelectorAll('input[type="checkbox"]');
-            const allSelected = Array.from(checkboxes).every(cb => cb.checked);
-            checkboxes.forEach(cb => cb.checked = !allSelected);
-            updateSelectedTopicCount();
+            
+            console.log(`✅ 선택된 주제 수: ${selectedCount}`);
+            selectedCheckboxes.forEach((cb, index) => {
+                console.log(`  ${index + 1}. ${cb.value}`);
+            });
         }
 
         // --- 예약 포스트 관리 ---
@@ -1051,7 +2735,6 @@
             const titleEl = document.getElementById('scheduled-list-title');
             titleEl.textContent = `예약된 글 목록 (${posts.length}개)`;
 
-            // 제목 중복 체크
             const titleCounts = {};
             posts.forEach(post => {
                 const title = post.title.toLowerCase();
@@ -1065,11 +2748,20 @@
             
             scheduledListUl.innerHTML = posts.map(post => {
                 const isDuplicate = titleCounts[post.title.toLowerCase()] > 1;
+                const publishTime = new Date(post.published).toLocaleString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+                
                 return `
                     <li class="p-3 bg-gray-50 dark:bg-gray-700 rounded-md flex justify-between items-center ${isDuplicate ? 'border-2 border-yellow-400' : ''}">
                         <div>
                             <p class="font-semibold">${post.title} ${isDuplicate ? '<span class="text-yellow-600 text-xs ml-2">(중복)</span>' : ''}</p>
-                            <p class="text-sm text-gray-500">${new Date(post.published).toLocaleString()} 발행 예정</p>
+                            <p class="text-sm text-gray-500">📅 ${publishTime} 발행 예정</p>
                         </div>
                         <button onclick="handleCancelSchedule('${post.id}')" class="bg-red-500 text-white px-3 py-1 text-sm rounded-md hover:bg-red-600">예약 취소</button>
                     </li>
@@ -1077,7 +2769,7 @@
             }).join('');
         }
         
-        async function handleCancelSchedule(postId) {
+        window.handleCancelSchedule = async function(postId) {
             if (!confirm('이 글의 예약을 취소하고 초안으로 되돌리시겠습니까?')) return;
             try {
                 await fetchWithAuth(`https://www.googleapis.com/blogger/v3/blogs/${selectedBlogId}/posts/${postId}/revert`, { method: 'POST' });
@@ -1088,13 +2780,7 @@
             }
         }
 
-        // --- 포스팅 로직 (단일, 수동) ---
-        function handleStopProcess() {
-            isProcessRunning = false;
-            bulkScheduleQueue = [];
-            addLog('사용자에 의해 작업이 중지 요청되었습니다.', 'warn');
-        }
-        
+        // --- 포스팅 로직 (단일, 수동) ---        
         function showManualPreview() {
             manualContentPreview.innerHTML = manualContentInput.value;
             manualContentInput.classList.add('hidden');
@@ -1130,7 +2816,6 @@
                 return;
             }
             
-            // 라벨 처리 (150자 제한)
             const rawLabels = labelsText ? labelsText.split(',').map(tag => tag.trim()).filter(Boolean) : [];
             const processedLabels = processLabels(rawLabels);
             
@@ -1157,12 +2842,10 @@
             progressContainer.classList.add('hidden');
         }
         
-        // 개선된 createAIPost 함수 - Pollinations 이미지 사용
         async function createAIPost(topic, instructions, shouldGenerateImage) {
             const steps = shouldGenerateImage ? 4 : 3;
             let currentStep = 0;
             
-            // Step 1: Generate Content
             currentStep++;
             updateProgress((currentStep/steps) * 100, `단계 ${currentStep}/${steps}: AI 글 작성`);
             addLog('📝 AI가 글을 작성하기 시작했습니다...', 'info');
@@ -1183,9 +2866,12 @@
                 - 마지막에 면책문구와 요약글 각 박스에 나온다. 
             `;
             
-            // 실시간 진행 표시를 위한 애니메이션
             let dots = 0;
             const writingInterval = setInterval(() => {
+                if (isProcessPaused) {
+                    currentStatusEl.textContent = `AI 글 작성 일시정지됨`;
+                    return;
+                }
                 dots = (dots + 1) % 4;
                 const dotStr = '.'.repeat(dots);
                 const elapsed = Math.floor((Date.now() - globalStartTime) / 1000);
@@ -1198,7 +2884,6 @@
                 addLog(`✅ 글 작성 완료! (약 ${Math.round(articleContent.length/100)*100}자)`, 'success');
                 let finalContent = articleContent;
 
-                // Step 2: Generate Images using Pollinations
                 if(shouldGenerateImage) {
                     const h2Regex = /<h2[^>]*>(.*?)<\/h2>/gi;
                     const h2Matches = [...finalContent.matchAll(h2Regex)];
@@ -1211,8 +2896,17 @@
                     for (let i = 0; i < imagePrompts.length; i++) {
                         const p = imagePrompts[i];
                         if (!isProcessRunning) throw new Error('작업 중지됨');
+                        if (isProcessPaused) {
+                            await new Promise(resolve => {
+                                const checkPause = setInterval(() => {
+                                    if (!isProcessPaused) {
+                                        clearInterval(checkPause);
+                                        resolve();
+                                    }
+                                }, 1000);
+                            });
+                        }
                         
-                        // Generate image with Pollinations
                         currentStep++;
                         updateProgress((currentStep/steps) * 100, `단계 ${currentStep}/${steps}: 이미지 ${i+1}/${imagePrompts.length} 생성`);
                         addLog(`🎨 Pollinations AI 이미지 생성 시작: "${p.substring(0, 30)}..."`, 'info');
@@ -1222,7 +2916,6 @@
                         addLog(`✅ 이미지 생성 완료!`, 'success');
                     }
 
-                    // Insert images into content
                     addLog('🖼️ 본문에 이미지 삽입 중...', 'info');
                     let imageTags = imageUrls.map(img => {
                         const altText = img.alt.replace(/"/g, '&quot;');
@@ -1232,7 +2925,6 @@
                         </figure>`;
                     });
 
-                    // 첫 번째 이미지를 썸네일로 설정
                     if (imageTags.length > 0) {
                         const separator = '<!-- more -->';
                         const paragraphs = finalContent.split(/(<\/p>)/);
@@ -1258,7 +2950,6 @@
                     addLog(`✅ ${imageUrls.length}개 이미지 삽입 완료`, 'success');
                 }
 
-                // Step 3: Generate Tags (with 150 character limit)
                 currentStep++;
                 updateProgress((currentStep/steps) * 100, `단계 ${currentStep}/${steps}: SEO 태그 생성`);
                 addLog('🏷️ AI가 SEO 태그를 생성 중...', 'info');
@@ -1274,7 +2965,6 @@
                 const tagsText = await geminiFetch('gemini-2.5-flash-preview-05-20', tagsPrompt);
                 
                 let labels = tagsText.split(',').map(tag => tag.trim()).filter(Boolean);
-                // 라벨 150자 제한 처리
                 const processedLabels = processLabels(labels);
                 
                 if (labels.length !== processedLabels.length) {
@@ -1284,7 +2974,6 @@
                 const labelString = processedLabels.join(', ');
                 addLog(`✅ SEO 태그 ${processedLabels.length}개 생성 완료 (${labelString.length}자)`, 'success');
 
-                // 완료
                 updateProgress(100, `✅ 모든 콘텐츠 생성 완료!`);
                 currentStatusEl.textContent = '모든 콘텐츠 생성 완료!';
                 
@@ -1296,7 +2985,6 @@
             }
         }
 
-        // 개선된 handleAIPublishPost 함수 - 중복 체크 추가
         async function handleAIPublishPost() {
             const topic = postTopicInput.value.trim();
             const publishTime = aiPublishTimeInput.value;
@@ -1312,7 +3000,6 @@
                 return;
             }
             
-            // 예약 발행인 경우 중복 체크
             if (publishTime) {
                 await fetchScheduledPostTitles();
                 if (scheduledPostTitles.has(topic.toLowerCase())) {
@@ -1329,18 +3016,16 @@
             initLog();
             progressContainer.classList.remove('hidden');
 
-            // 더 정확한 시간 예측
             const ESTIMATED_TIME = {
-                contentGeneration: 20,  // 20초
-                imageGeneration: shouldGenerateImage ? 15 : 0,  // 15초 (Pollinations는 더 빠름)
-                tagGeneration: 10,  // 10초
-                publishing: 5  // 5초
+                contentGeneration: 20,
+                imageGeneration: shouldGenerateImage ? 15 : 0,
+                tagGeneration: 10,
+                publishing: 5
             };
             
             const TOTAL_TIME = Object.values(ESTIMATED_TIME).reduce((a, b) => a + b, 0);
             globalStartTime = Date.now();
             
-            // 실시간 타이머 표시
             let elapsed = 0;
             const timerInterval = setInterval(() => {
                 elapsed = Math.floor((Date.now() - globalStartTime) / 1000);
@@ -1368,7 +3053,6 @@
                 
                 await publishPost(postData, publishTime);
                 
-                // 성공 시 Set에 추가
                 if (publishTime) {
                     scheduledPostTitles.add(topic.toLowerCase());
                 }
@@ -1377,14 +3061,12 @@
                 currentStatusEl.textContent = '포스팅 완료!';
                 postTopicInput.value = '';
                 
-                // 완료 통계 표시
                 clearInterval(timerInterval);
                 const totalElapsed = Math.floor((Date.now() - globalStartTime) / 1000);
                 timerContainer.innerHTML = `✅ 완료! (총 소요시간: ${totalElapsed}초)`;
                 
                 addLog(`🎉 총 ${totalElapsed}초 만에 포스팅 완료!`, 'success');
                 
-                // 진행률 바 성공 색상으로 변경
                 progressBar.classList.remove('error');
                 progressBar.classList.add('success');
 
@@ -1399,134 +3081,289 @@
             }
         }
         
-        // --- 대량 예약 로직 (중복 체크 추가) ---
+        // === 🎯 스마트 대량 예약 로직 (시작 날짜 반영) ===
         async function handleBulkSchedule() {
-            let selectedTopics = Array.from(topicIdeasList.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
-            const times = scheduleTimesInput.value.split(',').map(t => t.trim()).filter(Boolean);
-            const days = parseInt(scheduleDaysInput.value, 10);
+            const selectedCheckboxes = Array.from(topicIdeasList.querySelectorAll('input[type="checkbox"]:checked'));
+            let selectedTopics = selectedCheckboxes.map(cb => cb.value);
+            
+            const timesText = scheduleTimesInput.value.trim();
+            const daysValue = scheduleDaysInput.value.trim();
             const delayMinutes = parseInt(scheduleDelayInput.value, 10);
             const shouldGenerateImages = generateImageCheckboxBulk.checked;
+            const startDate = bulkStartDateInput.value;
 
             if (selectedTopics.length === 0) {
                 showStatusMessage('예약할 주제를 하나 이상 선택해주세요.', 'error'); 
                 return;
             }
-            if (times.length === 0 || !times.every(t => /^\d{2}:\d{2}$/.test(t))) {
-                showStatusMessage('발행 시간을 "HH:MM" 형식으로 하나 이상 입력해주세요.', 'error'); 
+            
+            const times = timesText.split(',').map(t => t.trim()).filter(Boolean);
+            if (times.length === 0 || !times.every(t => /^\d{1,2}:\d{2}$/.test(t))) {
+                showStatusMessage('발행 시간을 "HH:MM" 형식으로 하나 이상 입력해주세요. (예: 09:00, 17:00)', 'error'); 
                 return;
             }
+            
+            const days = parseInt(daysValue, 10);
             if (isNaN(days) || days < 1) {
                 showStatusMessage('예약 기간은 1일 이상이어야 합니다.', 'error'); 
                 return;
             }
+            
             if (isNaN(delayMinutes) || delayMinutes < 1) {
                 showStatusMessage('대기 시간은 1분 이상이어야 합니다.', 'error'); 
                 return;
             }
-
-            // 예약된 글 제목 먼저 가져오기
-            showStatusMessage('예약된 글 목록을 확인하는 중...', 'info');
-            await fetchScheduledPostTitles();
             
-            // 중복 제목 체크
-            const duplicateTopics = selectedTopics.filter(topic => 
+            if (!startDate) {
+                showStatusMessage('시작 날짜를 선택해주세요.', 'error');
+                return;
+            }
+            
+            const postsPerDay = times.length;
+            const totalSlots = postsPerDay * days;
+            const exactDaysNeeded = Math.ceil(selectedTopics.length / postsPerDay);
+            
+            if (totalSlots !== selectedTopics.length) {
+                let errorMessage = '';
+                if (totalSlots < selectedTopics.length) {
+                    const shortage = selectedTopics.length - totalSlots;
+                    errorMessage = `❌ 선택한 ${selectedTopics.length}개 주제를 모두 예약하려면 정확히 ${exactDaysNeeded}일이 필요합니다.\n\n현재 ${days}일 설정:\n• 하루 ${postsPerDay}회 × ${days}일 = ${totalSlots}개 슬롯\n• 부족한 슬롯: ${shortage}개\n\n${exactDaysNeeded}일로 수정하시겠습니까?`;
+                } else {
+                    const excess = totalSlots - selectedTopics.length;
+                    errorMessage = `❌ 선택한 ${selectedTopics.length}개 주제는 정확히 ${exactDaysNeeded}일이면 충분합니다.\n\n현재 ${days}일 설정:\n• 하루 ${postsPerDay}회 × ${days}일 = ${totalSlots}개 슬롯\n• 초과 슬롯: ${excess}개\n\n${exactDaysNeeded}일로 수정하시겠습니까?`;
+                }
+                
+                if (confirm(errorMessage)) {
+                    scheduleDaysInput.value = exactDaysNeeded;
+                    validateScheduleSettings();
+                    updateBulkDateInfo();
+                    return;
+                }
+                return;
+            }
+
+            showStatusMessage('기존 예약 현황을 확인하는 중...', 'info');
+            
+            // 스마트 스케줄 생성 (충돌 시간 자동 건너뛰기, 시작 날짜 반영)
+            const scheduleResult = await createSmartSchedule(selectedTopics, times, days, shouldGenerateImages, startDate);
+            const { bulkQueue, skippedSlots, processedTopics } = scheduleResult;
+
+            // 건너뛴 슬롯이 있을 때 상세 안내
+            if (skippedSlots.length > 0) {
+                let skipMessage = `⚠️ 다음 시간대는 자동으로 건너뛰었습니다:\n\n`;
+                
+                const groupedSkips = {};
+                skippedSlots.forEach(skip => {
+                    const key = skip.reason;
+                    if (!groupedSkips[key]) groupedSkips[key] = [];
+                    groupedSkips[key].push(`${skip.date} ${skip.time}`);
+                });
+                
+                Object.keys(groupedSkips).forEach(reason => {
+                    skipMessage += `📅 ${reason}:\n`;
+                    groupedSkips[reason].slice(0, 5).forEach(timeSlot => {
+                        skipMessage += `   • ${timeSlot}\n`;
+                    });
+                    if (groupedSkips[reason].length > 5) {
+                        skipMessage += `   • ... 외 ${groupedSkips[reason].length - 5}개\n`;
+                    }
+                    skipMessage += `\n`;
+                });
+                
+                if (bulkQueue.length > 0) {
+                    const firstJob = bulkQueue[0];
+                    const nextAvailable = firstJob.publishDate.toLocaleString('ko-KR');
+                    skipMessage += `✅ 다음 예약 가능한 시간: ${nextAvailable}\n`;
+                    skipMessage += `📝 실제 예약될 글: ${bulkQueue.length}개 (${selectedTopics.length}개 중)\n\n`;
+                    skipMessage += `🤖 스마트 스케줄링이 충돌을 자동으로 해결했습니다!\n`;
+                } else {
+                    skipMessage += `❌ 예약 가능한 시간이 없습니다.\n`;
+                    showStatusMessage(skipMessage, 'error');
+                    return;
+                }
+                
+                skipMessage += `계속하시겠습니까?`;
+                
+                if (!confirm(skipMessage)) {
+                    return;
+                }
+            }
+
+            // 제목 중복 체크
+            const duplicateTopics = bulkQueue.map(job => job.topic).filter(topic => 
                 scheduledPostTitles.has(topic.toLowerCase())
             );
             
             if (duplicateTopics.length > 0) {
                 const duplicateList = duplicateTopics.join('\n- ');
-                if (!confirm(`다음 주제들은 이미 예약되어 있습니다:\n\n- ${duplicateList}\n\n중복된 주제를 제외하고 계속하시겠습니까?`)) {
+                if (!confirm(`다음 주제들은 이미 예약된 제목과 중복됩니다:\n\n- ${duplicateList}\n\n중복된 주제를 제외하고 계속하시겠습니까?`)) {
                     return;
                 }
-                // 중복 제거
-                selectedTopics = selectedTopics.filter(topic => 
-                    !scheduledPostTitles.has(topic.toLowerCase())
+                
+                bulkScheduleQueue = bulkQueue.filter(job => 
+                    !scheduledPostTitles.has(job.topic.toLowerCase())
                 );
-                if (selectedTopics.length === 0) {
+                
+                if (bulkScheduleQueue.length === 0) {
                     showStatusMessage('예약 가능한 새로운 주제가 없습니다.', 'error');
                     return;
                 }
-            }
-
-            const totalSlots = times.length * days;
-            if (selectedTopics.length > totalSlots) {
-                if (!confirm(`선택된 주제(${selectedTopics.length}개)가 예약 가능한 자리(${totalSlots}개)보다 많습니다. ${totalSlots}개만 예약하시겠습니까?`)) {
-                    return;
-                }
-            }
-
-            let lastPublishDate = new Date();
-            bulkScheduleQueue = [];
-            let topicIndex = 0;
-
-            for (let i = 0; i < days && topicIndex < selectedTopics.length; i++) {
-                const targetDay = new Date();
-                targetDay.setDate(targetDay.getDate() + i);
-
-                for (const time of times) {
-                    if (topicIndex >= selectedTopics.length) break;
-                    
-                    const [hour, minute] = time.split(':');
-                    let publishDate = new Date(targetDay.getFullYear(), targetDay.getMonth(), targetDay.getDate(), hour, minute);
-
-                    if (publishDate < new Date()) continue;
-
-                    if (publishDate > lastPublishDate) {
-                        bulkScheduleQueue.push({
-                            topic: selectedTopics[topicIndex],
-                            publishDate: publishDate,
-                            generateImage: shouldGenerateImages
-                        });
-                        lastPublishDate = publishDate;
-                        topicIndex++;
-                    }
-                }
+            } else {
+                bulkScheduleQueue = bulkQueue;
             }
             
-            if (!confirm(`${bulkScheduleQueue.length}개의 글을 대량 예약하시겠습니까? 이 작업은 완료까지 오랜 시간이 걸릴 수 있습니다.`)) return;
+            totalBulkJobs = bulkScheduleQueue.length;
+            completedBulkJobs = 0;
+            
+            const firstJob = bulkScheduleQueue[0];
+            const lastJob = bulkScheduleQueue[bulkScheduleQueue.length - 1];
+            const startDateFormatted = new Date(startDate).toLocaleDateString('ko-KR');
+            const confirmMessage = `
+📅 스마트 대량 예약 상세 정보:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• 시작 날짜: ${startDateFormatted}
+• 선택한 주제: ${selectedTopics.length}개
+• 하루 발행 횟수: ${postsPerDay}회 (${times.join(', ')})
+• 예약 기간: ${days}일
+• 건너뛴 시간: ${skippedSlots.length}개 (충돌/과거)
+• 실제 예약될 글: ${totalBulkJobs}개
+• 첫 발행: ${firstJob.publishDate.toLocaleString('ko-KR')}
+• 마지막 발행: ${lastJob.publishDate.toLocaleString('ko-KR')}
+• 작업 간 대기: ${delayMinutes}분
+• 이미지 생성: ${shouldGenerateImages ? '예' : '아니오'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧠 스마트 스케줄링으로 기존 예약과의 충돌을 자동으로 해결했습니다!
+
+이 작업은 완료까지 약 ${Math.ceil(totalBulkJobs * delayMinutes / 60)}시간이 소요될 수 있습니다.
+계속하시겠습니까?`;
+            
+            if (!confirm(confirmMessage)) return;
 
             isProcessRunning = true;
             initLog();
             progressContainer.classList.remove('hidden');
             setPublishButtonState(true, 'bulk');
             globalStartTime = Date.now();
+            updateQueueStatus();
+            
+            addLog(`🚀 스마트 대량 예약 작업 시작 (총 ${totalBulkJobs}개)`, 'info');
+            addLog(`📅 시작 날짜: ${startDateFormatted}`, 'info');
+            if (skippedSlots.length > 0) {
+                addLog(`🧠 ${skippedSlots.length}개 시간대를 자동으로 건너뛰었습니다`, 'info');
+            }
             processBulkScheduleQueue();
         }
 
         async function processBulkScheduleQueue() {
-            const totalJobs = Array.from(topicIdeasList.querySelectorAll('input[type="checkbox"]:checked')).length;
-
             if (!isProcessRunning || bulkScheduleQueue.length === 0) {
-                if (isProcessRunning) {
-                    updateProgress(100, `(${totalJobs}/${totalJobs}) 모든 대량 예약 작업이 완료되었습니다.`);
-                    showStatusMessage('대량 예약이 완료되었습니다.', 'success');
+                if (isProcessRunning && completedBulkJobs === totalBulkJobs) {
+                    updateProgress(100, `✅ 모든 대량 예약 작업 완료! (${totalBulkJobs}/${totalBulkJobs})`);
+                    showStatusMessage(`🎉 ${totalBulkJobs}개의 스마트 대량 예약이 완료되었습니다!`, 'success');
+                    
+                    const totalTime = Math.floor((Date.now() - globalStartTime) / 1000);
+                    const hours = Math.floor(totalTime / 3600);
+                    const minutes = Math.floor((totalTime % 3600) / 60);
+                    const seconds = totalTime % 60;
+                    addLog(`⏱️ 총 소요시간: ${hours}시간 ${minutes}분 ${seconds}초`, 'success');
                 }
                 setPublishButtonState(false, 'bulk');
                 isProcessRunning = false;
+                totalBulkJobs = 0;
+                completedBulkJobs = 0;
+                updateQueueStatus();
                 return;
             }
             
-            const completedJobs = totalJobs - bulkScheduleQueue.length;
-            const job = bulkScheduleQueue.shift();
+             if (isProcessPaused) {
+                pausedQueue = [...bulkScheduleQueue];
+                bulkScheduleQueue = [];
+                addLog('⏸️ 대량 작업이 일시정지되었습니다', 'warn');
+                return;
+            }
             
-            updateProgress((completedJobs / totalJobs) * 100, `(${completedJobs + 1}/${totalJobs}) "${job.topic}" 포스팅 시작...`);
+            const job = bulkScheduleQueue.shift();
+            completedBulkJobs++;
+            
+            const publishTimeStr = job.publishDate.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            
+            updateProgress((completedBulkJobs / totalBulkJobs) * 100, 
+                `📝 (${completedBulkJobs}/${totalBulkJobs}) "${job.topic}" 작업 중...`);
+            updateQueueStatus();
+            
+            addLog(`📅 예약 시간: ${publishTimeStr}`, 'info');
 
             try {
                 const postData = await createAIPost(job.topic, WRITING_INSTRUCTIONS, job.generateImage);
                 await publishPost(postData, job.publishDate.toISOString());
                 
-                // 성공 시 Set에 추가하여 실시간 중복 방지
                 scheduledPostTitles.add(job.topic.toLowerCase());
                 
-                addLog(`✅ "${job.topic}" 예약 성공.`, 'success');
+                addLog(`✅ "${job.topic}" 예약 성공! (${publishTimeStr})`, 'success');
             } catch (e) {
+                if (e.message === '작업 중지됨') {
+                    addLog(`🛑 작업이 중지되었습니다`, 'error');
+                    return;
+                }
                 addLog(`❌ "${job.topic}" 예약 실패: ${e.message}`, 'error');
             } finally {
                 if (isProcessRunning && bulkScheduleQueue.length > 0) {
                     const delayMinutes = parseInt(scheduleDelayInput.value, 10) || 5;
-                    const delay = delayMinutes * 60 * 1000;
-                    addLog(`⏳ ${delayMinutes}분 후 다음 작업을 시작합니다...`);
-                    setTimeout(processBulkScheduleQueue, delay);
+                    const delayMs = delayMinutes * 60 * 1000;
+                    
+                    const nextJob = bulkScheduleQueue[0];
+                    const nextTimeStr = nextJob.publishDate.toLocaleString('ko-KR', {
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+                    
+                    addLog(`⏳ ${delayMinutes}분 후 다음 작업 시작 (다음: "${nextJob.topic}" - ${nextTimeStr})`, 'info');
+                    
+                    const waitStartTime = Date.now();
+                    waitingInterval = setInterval(() => {
+                        const elapsed = Date.now() - waitStartTime;
+                        const remaining = Math.max(0, delayMs - elapsed);
+                        
+                        if (!isProcessRunning) {
+                            clearInterval(waitingInterval);
+                            addLog('대기 중 작업이 중지되었습니다', 'warn');
+                            return;
+                        }
+                        
+                        if (isProcessPaused) {
+                            clearInterval(waitingInterval);
+                            pausedQueue = [...bulkScheduleQueue];
+                            bulkScheduleQueue = [];
+                            addLog('대기 중 작업이 일시정지되었습니다', 'warn');
+                            return;
+                        }
+                        
+                        if (remaining <= 0) {
+                            clearInterval(waitingInterval);
+                            processBulkScheduleQueue();
+                        } else {
+                            const remainingSeconds = Math.ceil(remaining / 1000);
+                            const remainingMinutes = Math.floor(remainingSeconds / 60);
+                            const remainingSecondsOnly = remainingSeconds % 60;
+                            
+                            currentStatusEl.innerHTML = `⏱️ 다음 작업까지: <span class="precise-timer">${remainingMinutes}분 ${remainingSecondsOnly}초</span>`;
+                            
+                            if (remainingSeconds % 10 === 0) {
+                                timerContainer.innerHTML = `⏳ 대기 시간: ${remainingMinutes}분 ${remainingSecondsOnly}초 남음`;
+                            }
+                        }
+                    }, 1000); // 1초마다 업데이트
                 } else {
                     processBulkScheduleQueue();
                 }
@@ -1543,6 +3380,17 @@
                 const scheduledDate = new Date(publishTime);
                 if (scheduledDate > new Date()) {
                     finalPostData.published = scheduledDate.toISOString();
+                    
+                    const timeStr = scheduledDate.toLocaleString('ko-KR', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    });
+                    addLog(`📅 예약 발행 시간: ${timeStr}`, 'info');
                 }
             }
 
@@ -1551,18 +3399,21 @@
                     method: 'POST',
                     body: JSON.stringify(finalPostData)
                 });
-                const message = (isScheduled && new Date(finalPostData.published) > new Date()) ? '성공적으로 예약되었습니다!' : '성공적으로 발행되었습니다!';
+                
+                const message = (isScheduled && new Date(finalPostData.published) > new Date()) 
+                    ? '✅ 성공적으로 예약되었습니다!' 
+                    : '✅ 성공적으로 발행되었습니다!';
                 
                 if (!isProcessRunning || bulkScheduleQueue.length === 0) {
                     showStatusMessage(`${message} <a href="${result.url}" target="_blank" class="underline">여기서 확인</a>`, 'success');
                 }
                 addLog(message, 'success');
             } catch (error) {
-                 if (!isProcessRunning || bulkScheduleQueue.length === 0) {
+                if (!isProcessRunning || bulkScheduleQueue.length === 0) {
                     showStatusMessage(`발행 실패: ${error.message}`, 'error');
-                 }
-                 addLog(`발행 실패: ${error.message}`, 'error');
-                 throw error; 
+                }
+                addLog(`❌ 발행 실패: ${error.message}`, 'error');
+                throw error; 
             }
         }
         
@@ -1581,6 +3432,7 @@
                 }
             } else {
                 stopButton.classList.add('hidden');
+                resumeButton.classList.add('hidden');
                 bulkButtons.forEach(btn => btn.disabled = false);
                 singleButton.disabled = false;
             }
@@ -1592,24 +3444,37 @@
             const typeClasses = {
                 success: ['bg-green-100', 'text-green-800'],
                 error: ['bg-red-100', 'text-red-800'],
-                info: ['bg-blue-100', 'text-blue-800']
+                info: ['bg-blue-100', 'text-blue-800'],
+                warn: ['bg-yellow-100', 'text-yellow-800']
             };
             statusMessageEl.classList.add(...(typeClasses[type] || typeClasses.info));
             statusMessageEl.classList.remove('hidden');
+            
+            setTimeout(() => {
+                statusMessageEl.classList.add('hidden');
+            }, 3000);
         }
 
         function initLog() {
             logList.innerHTML = '';
             progressBar.style.width = '0%';
-            progressBar.classList.remove('success', 'error');
+            progressBar.classList.remove('success', 'error', 'paused');
             statusMessageEl.classList.add('hidden');
             currentStatusEl.textContent = '준비 중...';
+            currentStatusEl.classList.remove('paused-indicator');
             timerContainer.textContent = '';
         }
 
         function addLog(message, type = 'info') {
             const li = document.createElement('li');
-            const time = new Date().toLocaleTimeString();
+            const now = new Date();
+            const time = now.toLocaleTimeString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            
             let icon = '';
             let typeClass = '';
             
@@ -1638,6 +3503,8 @@
         function handlePostingError(error) {
             console.error('포스팅 실패:', error);
             currentStatusEl.textContent = '작업 실패';
+            currentStatusEl.classList.remove('paused-indicator');
+            
             if (error.message === '작업 중지됨') {
                 showStatusMessage('작업이 사용자에 의해 중지되었습니다.', 'error');
                 addLog('작업이 중지되었습니다.', 'error');
@@ -1654,7 +3521,6 @@
             }
             progressBar.style.width = `${percentage}%`;
         }
-        
     </script>
 </body>
 </html>
