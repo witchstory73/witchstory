@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>스타일러프로 API 블로그 자동 포스팅  - by 디지털노마드</title>
+    <title>스타일러프로 API 블로그 자동 포스팅 - by 디지털노마드</title>
     <!-- Google Identity Services Library -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Tailwind CSS -->
@@ -438,6 +438,32 @@
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.3);
         }
+
+        /* 퍼머링크 입력 스타일 */
+        .permalink-section {
+            background-color: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        
+        .permalink-preview {
+            font-family: monospace;
+            font-size: 12px;
+            color: #0369a1;
+            background-color: #e0f2fe;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+            word-break: break-all;
+        }
+        
+        .permalink-info {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
@@ -521,7 +547,7 @@
                                 <i data-lucide="eye" class="w-5 h-5"></i>
                             </button>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">이미지 생성까지 자동 (무료, API 키 불필요)</p>
+                        <p class="text-xs text-gray-500 mt-1">이미지 생성까지 자동 (이미지 무료, API 키)</p>
                     </div>
                 </div>
                 <button id="save-settings-button" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
@@ -750,6 +776,23 @@
                         이 지침을 기본값으로 저장
                     </button>
                 </div>
+                
+                <!-- 퍼머링크 설정 섹션 추가 -->
+                <div class="permalink-section">
+                    <label for="ai-permalink-input" class="block text-sm font-medium mb-2">
+                        <i data-lucide="link" class="w-4 h-4 inline mr-1"></i>
+                        퍼머링크 (선택사항)
+                    </label>
+                    <input type="text" id="ai-permalink-input" class="mt-1 block w-full px-3 py-2 border rounded-md" 
+                           placeholder="예: my-custom-url (영문, 숫자, 하이픈만 사용)">
+                    <div id="ai-permalink-preview" class="permalink-preview hidden"></div>
+                    <p class="permalink-info">
+                        • 비워두면 제목에서 자동 생성됩니다<br>
+                        • 영문 소문자, 숫자, 하이픈(-)만 사용 가능<br>
+                        • 공백은 자동으로 하이픈으로 변환됩니다
+                    </p>
+                </div>
+                
                 <div>
                     <label for="ai-publish-time-input" class="block text-sm font-medium">예약 발행 시간</label>
                     <input type="datetime-local" id="ai-publish-time-input" class="mt-1 block w-full px-3 py-2 border rounded-md">
@@ -787,6 +830,22 @@
                     <input type="text" id="manual-labels-input" class="mt-1 block w-full px-3 py-2 border rounded-md" placeholder="예: 요리, 레시피, 한식">
                     <p class="text-xs text-gray-500 mt-1">블로그 SEO를 위한 라벨/태그를 입력하세요 (각 라벨 최대 20자, 전체 최대 150자)</p>
                 </div>
+                
+                <!-- 수동 모드 퍼머링크 설정 추가 -->
+                <div class="permalink-section">
+                    <label for="manual-permalink-input" class="block text-sm font-medium mb-2">
+                        <i data-lucide="link" class="w-4 h-4 inline mr-1"></i>
+                        퍼머링크 (선택사항)
+                    </label>
+                    <input type="text" id="manual-permalink-input" class="mt-1 block w-full px-3 py-2 border rounded-md" 
+                           placeholder="예: my-custom-url (영문, 숫자, 하이픈만 사용)">
+                    <div id="manual-permalink-preview" class="permalink-preview hidden"></div>
+                    <p class="permalink-info">
+                        • 비워두면 제목에서 자동 생성됩니다<br>
+                        • 영문 소문자, 숫자, 하이픈(-)만 사용 가능
+                    </p>
+                </div>
+                
                 <div>
                     <label for="manual-publish-time-input" class="block text-sm font-medium">예약 발행 시간</label>
                     <input type="datetime-local" id="manual-publish-time-input" class="mt-1 block w-full px-3 py-2 border rounded-md">
@@ -847,8 +906,9 @@
         let WRITING_INSTRUCTIONS = null;
         let accessToken = null;
         let selectedBlogId = null;
-        let selectedBlogName = null; // 현재 선택된 블로그 이름 저장
-        let userBlogs = []; // 사용자 블로그 목록 저장
+        let selectedBlogName = null;
+        let selectedBlogUrl = null;
+        let userBlogs = [];
         let tokenClient;
         let isProcessRunning = false;
         let isProcessPaused = false;
@@ -858,7 +918,7 @@
         let pausedQueue = [];
         let globalStartTime = null;
         let scheduledPostTitles = new Set();
-        let scheduledPostTimes = new Map(); // 날짜별 시간대 저장
+        let scheduledPostTimes = new Map();
         let totalBulkJobs = 0;
         let completedBulkJobs = 0;
         let waitingInterval = null;
@@ -872,9 +932,9 @@
         let tokenWarningTimer = null;
         let isAutoRefreshEnabled = false;
         let isRefreshing = false;
-        const TOKEN_DURATION = 60 * 60 * 1000;
-        const TOKEN_WARNING_TIME = 5 * 60 * 1000;
-        const TOKEN_AUTO_REFRESH_TIME = 10 * 60 * 1000;
+        const TOKEN_DURATION = 60 * 60 * 1000; // 1시간
+        const TOKEN_WARNING_TIME = 5 * 60 * 1000; // 5분
+        const TOKEN_AUTO_REFRESH_TIME = 10 * 60 * 1000; // 10분 (실제로 만료 10분 전에 갱신)
 
         // DOM 요소
         const settingsView = document.getElementById('settings-view');
@@ -931,6 +991,8 @@
         const aiPublishTimeInput = document.getElementById('ai-publish-time-input');
         const aiPublishButton = document.getElementById('ai-publish-button');
         const generateImageCheckboxSingle = document.getElementById('generate-image-checkbox-single');
+        const aiPermalinkInput = document.getElementById('ai-permalink-input');
+        const aiPermalinkPreview = document.getElementById('ai-permalink-preview');
         
         const manualTitleInput = document.getElementById('manual-title-input');
         const manualContentInput = document.getElementById('manual-content-input');
@@ -941,6 +1003,8 @@
         const manualPublishTimeInput = document.getElementById('manual-publish-time-input');
         const manualPublishButton = document.getElementById('manual-publish-button');
         const manualResetButton = document.getElementById('manual-reset-button');
+        const manualPermalinkInput = document.getElementById('manual-permalink-input');
+        const manualPermalinkPreview = document.getElementById('manual-permalink-preview');
         const scheduledLoader = document.getElementById('scheduled-loader');
         const scheduledListUl = document.getElementById('scheduled-list-ul');
         const stopButton = document.getElementById('stop-button');
@@ -970,7 +1034,12 @@
         const modalTimeRemaining = document.getElementById('modal-time-remaining');
         const tokenExplanation = document.getElementById('token-explanation');
         
-        const defaultInstructions = `반드시 html 코드만 제공한다. 절대 h1 태그는 사용하지 않는다.
+        // 267번 파일의 글쓰기 지침 적용
+        const defaultInstructions = `당신은 SEO 최적화 전문 블로그 작가입니다. 다음 지침에 따라 블로그 글을 작성하세요:
+
+## 글 작성 규칙
+
+반드시 html 코드만 제공한다. 절대 h1 태그는 사용하지 않는다.
 
 구글/네이버 알고리즘 최적화 HTML 코드로만 글 작성
 
@@ -1115,7 +1184,34 @@
 - "합니다", "입니다" 대신 "해요", "이에요" 사용
 - 글자수 10000자 이상 충실히 작성
 - HTML 코드만 제공, 주석이나 설명 없음
-- 표 글자는 반드시 검정색(#000000)으로 가독성 확보`;
+- 표 글자는 반드시 검정색(#000000)으로 가독성 확보
+
+위 지침에 따라 주제에 맞는 고품질 블로그 글을 작성해주세요.`;
+
+        // 퍼머링크 유효성 검사 및 포맷팅 함수
+        function formatPermalink(permalink) {
+            if (!permalink) return '';
+            
+            // 소문자로 변환, 공백을 하이픈으로, 특수문자 제거
+            return permalink
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^a-z0-9-]/g, '')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+        }
+        
+        // 퍼머링크 미리보기 업데이트
+        function updatePermalinkPreview(inputElement, previewElement) {
+            const permalink = inputElement.value.trim();
+            if (permalink && selectedBlogUrl) {
+                const formatted = formatPermalink(permalink);
+                previewElement.innerHTML = `<strong>URL 미리보기:</strong> ${selectedBlogUrl}${formatted}.html`;
+                previewElement.classList.remove('hidden');
+            } else {
+                previewElement.classList.add('hidden');
+            }
+        }
    
         // --- 초기화 및 뷰 관리 ---
         window.onload = () => {
@@ -1157,6 +1253,19 @@
             pauseResumeBtn.addEventListener('click', handlePauseResume);
             clearQueueBtn.addEventListener('click', handleClearQueue);
             tabs.addEventListener('click', handleTabClick);
+            
+            // 퍼머링크 입력 이벤트 리스너 추가
+            if (aiPermalinkInput) {
+                aiPermalinkInput.addEventListener('input', () => {
+                    updatePermalinkPreview(aiPermalinkInput, aiPermalinkPreview);
+                });
+            }
+            
+            if (manualPermalinkInput) {
+                manualPermalinkInput.addEventListener('input', () => {
+                    updatePermalinkPreview(manualPermalinkInput, manualPermalinkPreview);
+                });
+            }
             
             if (autoRefreshToggle) {
                 autoRefreshToggle.addEventListener('change', handleAutoRefreshToggle);
@@ -1205,9 +1314,7 @@
             document.addEventListener('visibilitychange', handleVisibilityChange);
         };
         
-        // === 🎯 블로그 선택 모달 관련 함수들 ===
-        
-        // 블로그 선택 모달 표시
+        // === 블로그 선택 모달 관련 함수들 ===
         async function showBlogSelectionModal() {
             if (isProcessRunning) {
                 showStatusMessage('작업이 진행 중일 때는 블로그를 변경할 수 없습니다.', 'error');
@@ -1219,7 +1326,6 @@
             blogModalList.innerHTML = '';
             
             try {
-                // 블로그 목록이 이미 있으면 재사용, 없으면 새로 가져오기
                 if (userBlogs.length === 0) {
                     const data = await fetchWithAuth('https://www.googleapis.com/blogger/v3/users/self/blogs');
                     userBlogs = data.items || [];
@@ -1233,7 +1339,6 @@
             }
         }
         
-        // 블로그 모달 목록 렌더링
         function renderBlogModalList(blogs) {
             if (blogs.length === 0) {
                 blogModalList.innerHTML = '<div class="text-center text-gray-500 p-4">소유한 블로그가 없습니다.</div>';
@@ -1243,7 +1348,7 @@
             blogModalList.innerHTML = blogs.map(blog => {
                 const isCurrentBlog = blog.id === selectedBlogId;
                 return `
-                    <div class="blog-item ${isCurrentBlog ? 'current' : ''}" onclick="selectBlogFromModal('${blog.id}', '${blog.name.replace(/'/g, "\\'")}')">
+                    <div class="blog-item ${isCurrentBlog ? 'current' : ''}" onclick="selectBlogFromModal('${blog.id}', '${blog.name.replace(/'/g, "\\'")}', '${blog.url}')">
                         <h3 class="font-bold text-sm">${blog.name}</h3>
                         <p class="text-xs text-gray-500 mt-1">${blog.url}</p>
                     </div>
@@ -1251,8 +1356,7 @@
             }).join('');
         }
         
-        // 모달에서 블로그 선택
-        window.selectBlogFromModal = function(blogId, blogName) {
+        window.selectBlogFromModal = function(blogId, blogName, blogUrl) {
             if (blogId === selectedBlogId) {
                 closeBlogSelectionModal();
                 return;
@@ -1260,27 +1364,32 @@
             
             selectedBlogId = blogId;
             selectedBlogName = blogName;
+            selectedBlogUrl = blogUrl;
             blogTitleEl.textContent = blogName;
             
-            // 선택된 블로그에 맞는 글쓰기 지침 로드
             WRITING_INSTRUCTIONS = localStorage.getItem(`bloggerInstructions_${selectedBlogId}`) || defaultInstructions;
             writingInstructionsInput.value = WRITING_INSTRUCTIONS;
             
-            // 예약된 글 목록 초기화 (새 블로그이므로)
             scheduledPostTitles.clear();
             scheduledPostTimes.clear();
+            
+            // 퍼머링크 미리보기 업데이트
+            if (aiPermalinkInput.value) {
+                updatePermalinkPreview(aiPermalinkInput, aiPermalinkPreview);
+            }
+            if (manualPermalinkInput.value) {
+                updatePermalinkPreview(manualPermalinkInput, manualPermalinkPreview);
+            }
             
             closeBlogSelectionModal();
             showStatusMessage(`"${blogName}" 블로그로 변경되었습니다.`, 'success');
             
-            // 예약된 글 탭이 활성화되어 있다면 새로고침
             const activeTab = document.querySelector('.tab-button.active');
             if (activeTab && activeTab.dataset.tab === 'scheduled-list') {
                 fetchScheduledPosts();
             }
         }
         
-        // 블로그 선택 모달 닫기
         window.closeBlogSelectionModal = function() {
             blogSelectionModal.classList.remove('active');
         }
@@ -1316,19 +1425,16 @@
                        String(date.getMinutes()).padStart(2, '0');
             };
             
-            // 대량 예약 시작 날짜를 내일로 설정
             if (bulkStartDateInput) {
                 bulkStartDateInput.value = formatDate(tomorrow);
                 updateBulkDateInfo();
             }
             
-            // 단일 포스팅 예약 시간도 내일 09:00으로 설정
             if (aiPublishTimeInput) {
                 tomorrow.setHours(9, 0, 0, 0);
                 aiPublishTimeInput.value = formatDateTime(tomorrow);
             }
             
-            // 수동 포스팅 예약 시간도 내일 09:00으로 설정
             if (manualPublishTimeInput) {
                 manualPublishTimeInput.value = formatDateTime(tomorrow);
             }
@@ -1374,9 +1480,7 @@
             bulkDateInfo.classList.remove('hidden');
         }
         
-        // ===== 🎯 스마트 스케줄링 핵심 로직 (시작 날짜 반영) =====
-        
-        // 시간대별 예약 현황 가져오기
+        // ===== 스마트 스케줄링 핵심 로직 (시작 날짜 반영) =====
         async function fetchScheduledPostsWithTimes() {
             try {
                 currentStatusEl.textContent = '중복 날짜 체크 중입니다...';
@@ -1386,8 +1490,8 @@
                     `https://www.googleapis.com/blogger/v3/blogs/${selectedBlogId}/posts?status=SCHEDULED&maxResults=500&fields=items(title,published)`
                 );
                 
-                scheduledPostTimes = new Map(); // 날짜별 시간대 저장
-                scheduledPostTitles = new Set(); // 제목 중복 체크용
+                scheduledPostTimes = new Map();
+                scheduledPostTitles = new Set();
                 
                 (data.items || []).forEach(post => {
                     const publishDate = new Date(post.published);
@@ -1410,9 +1514,7 @@
             }
         }
         
-        // 스마트 스케줄 생성 (충돌 시간 자동 건너뛰기, 시작 날짜 반영)
         async function createSmartSchedule(selectedTopics, times, days, shouldGenerateImages, startDate = null) {
-            // 기존 예약 시간 가져오기
             await fetchScheduledPostsWithTimes();
             
             const bulkQueue = [];
@@ -1433,7 +1535,6 @@
                     const publishDate = new Date(currentDate);
                     publishDate.setHours(hour, minute, 0, 0);
                     
-                    // 이미 예약된 시간인지 체크
                     if (scheduledPostTimes.has(dateKey) && scheduledPostTimes.get(dateKey).has(timeStr)) {
                         const skipInfo = {
                             date: currentDate.toLocaleDateString('ko-KR'),
@@ -1442,10 +1543,9 @@
                             type: 'conflict'
                         };
                         skippedSlots.push(skipInfo);
-                        continue; // 이 시간대는 건너뛰기
+                        continue;
                     }
                     
-                    // 과거 시간도 건너뛰기 (시작 날짜가 지정된 경우 제외)
                     if (!startDate && publishDate <= now) {
                         const skipInfo = {
                             date: currentDate.toLocaleDateString('ko-KR'),
@@ -1469,7 +1569,7 @@
             return { bulkQueue, skippedSlots, processedTopics: topicIndex };
         }
         
-        // ===== 🎯 완벽한 예약 설정 검증 로직 (15개 = 15개, 100개 = 100개 정확 매칭) =====
+        // ===== 완벽한 예약 설정 검증 로직 (15개 = 15개, 100개 = 100개 정확 매칭) =====
         function validateScheduleSettings() {
             if (!topicIdeasList || !scheduleValidationMessage) return;
             
@@ -1478,14 +1578,12 @@
             const timesText = scheduleTimesInput.value.trim();
             const daysValue = scheduleDaysInput.value.trim();
             
-            // 입력값이 부족하면 메시지와 계산 표시 지우기
             if (selectedCount === 0 || !timesText || !daysValue) {
                 scheduleValidationMessage.innerHTML = '';
                 scheduleCalculationDisplay.innerHTML = '';
                 return;
             }
             
-            // 시간 파싱 및 검증
             const times = timesText.split(',').map(t => t.trim()).filter(Boolean);
             if (times.length === 0) {
                 showValidationMessage('⚠️ 시간을 입력해주세요.', 'error');
@@ -1493,7 +1591,6 @@
                 return;
             }
             
-            // 시간 형식 검증 (HH:MM 또는 H:MM)
             const invalidTimes = times.filter(t => !/^\d{1,2}:\d{2}$/.test(t));
             if (invalidTimes.length > 0) {
                 showValidationMessage(`⚠️ 잘못된 시간 형식: ${invalidTimes.join(', ')} (예: 09:00, 17:00)`, 'error');
@@ -1501,7 +1598,6 @@
                 return;
             }
             
-            // 일수 파싱 및 검증
             const days = parseInt(daysValue, 10);
             if (isNaN(days) || days < 1) {
                 showValidationMessage('⚠️ 예약 기간은 1일 이상이어야 합니다.', 'error');
@@ -1509,26 +1605,20 @@
                 return;
             }
             
-            // ===== 🔥 핵심: 완벽한 매칭 계산 로직 =====
             const postsPerDay = times.length;
             const totalAvailableSlots = postsPerDay * days;
             const exactDaysNeeded = Math.ceil(selectedCount / postsPerDay);
             
-            // 실시간 계산 표시
             showScheduleCalculation(selectedCount, postsPerDay, days, totalAvailableSlots, exactDaysNeeded);
             
-            // 정확한 매칭 검증
             if (totalAvailableSlots === selectedCount) {
-                // 🎯 완벽한 매칭 (15개 = 15개, 100개 = 100개)
                 showValidationMessage(`✅ 완벽합니다! ${selectedCount}개 주제가 ${days}일 동안 정확히 예약됩니다.`, 'success');
             } else if (totalAvailableSlots < selectedCount) {
-                // 📉 슬롯 부족 (예: 15개 주제인데 12개 슬롯만 있음)
                 const shortage = selectedCount - totalAvailableSlots;
                 let message = `⚠️ ${selectedCount}개 주제를 모두 예약하려면 ${exactDaysNeeded}일이 필요합니다. 현재 ${days}일 설정으로는 ${totalAvailableSlots}개만 예약되고 ${shortage}개가 예약되지 않습니다.`;
                 message += `<br><button onclick="adjustDaysAutomatically(${exactDaysNeeded})" class="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">${exactDaysNeeded}일로 자동 수정</button>`;
                 showValidationMessage(message, 'warning');
             } else {
-                // 📈 슬롯 과다 (예: 15개 주제인데 21개 슬롯 있음)
                 const excess = totalAvailableSlots - selectedCount;
                 let message = `❌ ${selectedCount}개 주제는 ${exactDaysNeeded}일이면 충분합니다. 현재 ${days}일로 설정되어 ${excess}개 슬롯이 초과됩니다.`;
                 message += `<br><button onclick="adjustDaysAutomatically(${exactDaysNeeded})" class="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">${exactDaysNeeded}일로 자동 수정</button>`;
@@ -1536,7 +1626,6 @@
             }
         }
         
-        // 실시간 매칭 계산 표시 함수
         function showScheduleCalculation(selectedCount, postsPerDay, days, totalSlots, exactDaysNeeded) {
             let calculationType = '';
             let calculationClass = '';
@@ -1567,7 +1656,6 @@
             `;
         }
         
-        // 검증 메시지 표시 함수
         function showValidationMessage(message, type) {
             const iconMap = {
                 'success': 'check-circle',
@@ -1585,18 +1673,15 @@
             lucide.createIcons();
         }
         
-        // 일수 자동 조정 함수
         window.adjustDaysAutomatically = function(days) {
             scheduleDaysInput.value = days;
-            validateScheduleSettings(); // 즉시 재검증
-            updateBulkDateInfo(); // 날짜 정보 업데이트
+            validateScheduleSettings();
+            updateBulkDateInfo();
             updateSchedulePreviewIfVisible();
             
-            // 사용자에게 피드백
             showStatusMessage(`📅 예약 기간이 ${days}일로 자동 조정되었습니다.`, 'success');
         }
         
-        // 전체 선택 / 해제 함수 분리
         function handleSelectAllTopics() {
             const checkboxes = topicIdeasList.querySelectorAll('input[type="checkbox"]');
             checkboxes.forEach(cb => {
@@ -1604,8 +1689,8 @@
                 cb.closest('li').classList.add('selected');
             });
             updateSelectedTopicCount();
-            validateScheduleSettings(); // 실시간 검증
-            updateBulkDateInfo(); // 날짜 정보 업데이트
+            validateScheduleSettings();
+            updateBulkDateInfo();
         }
         
         function handleDeselectAllTopics() {
@@ -1615,8 +1700,8 @@
                 cb.closest('li').classList.remove('selected');
             });
             updateSelectedTopicCount();
-            validateScheduleSettings(); // 실시간 검증
-            updateBulkDateInfo(); // 날짜 정보 업데이트
+            validateScheduleSettings();
+            updateBulkDateInfo();
         }
         
         // --- 예약 일정 미리보기 함수들 (스마트 버전, 시작 날짜 반영) ---
@@ -1649,7 +1734,6 @@
                 return;
             }
             
-            // 스마트 스케줄링으로 미리보기 생성
             await generateSchedulePreviewSmart(selectedTopics, times, days, startDate);
             schedulePreviewContainer.classList.remove('hidden');
         }
@@ -1658,7 +1742,6 @@
             const startDate = new Date(startDateStr);
             let html = '';
             
-            // 기존 예약 정보 가져오기
             await fetchScheduledPostsWithTimes();
             
             let topicIndex = 0;
@@ -1670,7 +1753,6 @@
             const totalSlots = postsPerDay * days;
             const exactDaysNeeded = Math.ceil(topics.length / postsPerDay);
             
-            // 검증 메시지 (미리보기용)
             if (totalSlots !== topics.length) {
                 if (totalSlots < topics.length) {
                     html += `<div class="bg-yellow-100 text-yellow-800 p-2 rounded mb-2 text-sm">
@@ -1685,7 +1767,6 @@
                 }
             }
             
-            // 예약 일정 생성 (스마트 충돌 감지)
             for (let dayOffset = 0; dayOffset < days && topicIndex < topics.length; dayOffset++) {
                 const currentDate = new Date(startDate);
                 currentDate.setDate(currentDate.getDate() + dayOffset);
@@ -1703,7 +1784,6 @@
                     const publishDate = new Date(currentDate);
                     publishDate.setHours(hour, minute, 0, 0);
                     
-                    // 충돌 체크
                     const isConflict = scheduledPostTimes.has(dateKey) && scheduledPostTimes.get(dateKey).has(timeStr);
                     const now = new Date();
                     const isPastTime = publishDate <= now;
@@ -1734,7 +1814,6 @@
                 }
             }
             
-            // 스마트 요약 정보
             const smartSummaryHtml = `
                 <div class="smart-schedule-info">
                     <div class="font-bold mb-2">🧠 스마트 스케줄링 결과:</div>
@@ -1847,7 +1926,7 @@
                     clearInterval(nextPostingTimeInterval);
                 }
                 updateNextPostingTime();
-                nextPostingTimeInterval = setInterval(updateNextPostingTime, 1000); // 1초마다 업데이트
+                nextPostingTimeInterval = setInterval(updateNextPostingTime, 1000);
             } else {
                 queueStatus.classList.add('hidden');
                 if (nextPostingTimeInterval) {
@@ -1960,7 +2039,7 @@
             processBulkScheduleQueue();
         }
         
-        // --- 토큰 관리 함수들 ---
+        // --- 토큰 관리 함수들 (수정: 정확히 10분 전 갱신) ---
         function updateAutoRefreshStatus() {
             if (autoRefreshStatus) {
                 autoRefreshStatus.textContent = isAutoRefreshEnabled ? '켬' : '끔';
@@ -2023,6 +2102,7 @@
             
             tokenProgress.style.width = `${percentRemaining}%`;
             
+            // 색상 변경 로직
             if (remaining <= TOKEN_WARNING_TIME) {
                 tokenProgress.style.backgroundColor = '#ef4444';
                 tokenTimer.classList.add('token-warning');
@@ -2032,6 +2112,18 @@
             } else {
                 tokenProgress.style.backgroundColor = '#ffffff';
                 tokenTimer.classList.remove('token-warning');
+            }
+            
+            // 자동 갱신이 켜져있고 정확히 10분 남았을 때 갱신
+            if (isAutoRefreshEnabled && !isRefreshing) {
+                const minutesRemaining = Math.floor(remaining / 60000);
+                const secondsRemaining = Math.floor((remaining % 60000) / 1000);
+                
+                // 정확히 10분 0초 ~ 10분 1초 사이일 때 갱신
+                if (minutesRemaining === 10 && secondsRemaining <= 1) {
+                    console.log(`자동 토큰 갱신 실행 (남은 시간: ${minutesRemaining}분 ${secondsRemaining}초)`);
+                    extendSession(true);
+                }
             }
         }
         
@@ -2052,19 +2144,10 @@
         }
         
         function setupAutoRefresh() {
+            // 이제 updateTokenDisplay에서 직접 처리하므로 별도 타이머 불필요
             if (tokenRefreshTimer) {
                 clearTimeout(tokenRefreshTimer);
-            }
-            
-            const timeUntilRefresh = tokenExpiryTime - Date.now() - TOKEN_AUTO_REFRESH_TIME;
-            
-            if (timeUntilRefresh > 0) {
-                tokenRefreshTimer = setTimeout(() => {
-                    if (isAutoRefreshEnabled && !isRefreshing) {
-                        console.log('자동 토큰 갱신 시작...');
-                        extendSession(true);
-                    }
-                }, timeUntilRefresh);
+                tokenRefreshTimer = null;
             }
         }
         
@@ -2075,12 +2158,8 @@
             updateAutoRefreshStatus();
             
             if (isAutoRefreshEnabled) {
-                setupAutoRefresh();
-                showStatusMessage('자동 연장이 활성화되었습니다. 세션이 자동으로 유지됩니다.', 'success');
+                showStatusMessage('자동 연장이 활성화되었습니다. 세션이 만료 10분 전에 자동으로 갱신됩니다.', 'success');
             } else {
-                if (tokenRefreshTimer) {
-                    clearTimeout(tokenRefreshTimer);
-                }
                 showStatusMessage('자동 연장이 비활성화되었습니다. 세션 만료 전 수동으로 연장해주세요.', 'info');
             }
         }
@@ -2106,12 +2185,14 @@
             } else {
                 const notification = document.createElement('div');
                 notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                notification.innerHTML = '🔄 세션이 자동으로 연장되었습니다';
+                notification.innerHTML = '🔄 세션이 자동으로 연장되었습니다 (만료 10분 전)';
                 document.body.appendChild(notification);
                 
                 setTimeout(() => {
                     notification.remove();
                 }, 3000);
+                
+                addLog('🔄 세션 자동 연장 완료 (만료 10분 전)', 'success');
             }
         }
         
@@ -2251,6 +2332,7 @@
             if (wasLoggedIn) {
                 const minutes = Math.floor((tokenExpiryTime - Date.now()) / 60000);
                 showStatusMessage(`✅ 세션이 ${minutes}분 연장되었습니다.`, 'success');
+                addLog(`✅ 세션 연장 완료 (${minutes}분)`, 'success');
             } else {
                 showView('blog-selection');
                 fetchUserBlogs();
@@ -2279,6 +2361,7 @@
                     accessToken = null;
                     selectedBlogId = null;
                     selectedBlogName = null;
+                    selectedBlogUrl = null;
                     userBlogs = [];
                     tokenExpiryTime = null;
                     isRefreshing = false;
@@ -2353,7 +2436,7 @@
             blogList.innerHTML = '';
             try {
                 const data = await fetchWithAuth('https://www.googleapis.com/blogger/v3/users/self/blogs');
-                userBlogs = data.items || []; // 블로그 목록 저장
+                userBlogs = data.items || [];
                 renderBlogList(userBlogs);
             } catch (error) {
                 showStatusMessage(`블로그 목록 로드 실패: ${error.message}`, 'error');
@@ -2371,15 +2454,16 @@
                 return;
             }
             blogList.innerHTML = blogs.map(blog => `
-                <li class="p-3 bg-gray-50 dark:bg-gray-700 rounded-md cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900" onclick="selectBlog('${blog.id}', '${blog.name.replace(/'/g, "\\'")}')">
+                <li class="p-3 bg-gray-50 dark:bg-gray-700 rounded-md cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900" onclick="selectBlog('${blog.id}', '${blog.name.replace(/'/g, "\\'")}', '${blog.url}')">
                     <h3 class="font-bold">${blog.name}</h3>
                 </li>
             `).join('');
         }
 
-        window.selectBlog = function(blogId, blogName) {
+        window.selectBlog = function(blogId, blogName, blogUrl) {
             selectedBlogId = blogId;
             selectedBlogName = blogName;
+            selectedBlogUrl = blogUrl;
             blogTitleEl.textContent = blogName;
             WRITING_INSTRUCTIONS = localStorage.getItem(`bloggerInstructions_${selectedBlogId}`) || defaultInstructions;
             writingInstructionsInput.value = WRITING_INSTRUCTIONS;
@@ -2481,12 +2565,12 @@
                 
                 const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1200&height=800&nologo=true&seed=${seed}`;
                 
-                console.log('Pollinations 이미지 URL:', imageUrl);
+                console.log('flux 이미지 URL:', imageUrl);
                 addLog('✅ 이미지 생성 완료', 'success');
                 
                 return imageUrl;
             } catch (error) {
-                console.error('Pollinations 이미지 생성 실패:', error);
+                console.error('flux 이미지 생성 실패:', error);
                 addLog('⚠️ 이미지 생성 실패, 기본 이미지 사용', 'warn');
                 
                 const fallbackSeed = Date.now();
@@ -2512,10 +2596,8 @@
             }
             
             cleanedContent = cleanedContent.replace(/<h1[^>]*>.*?<\/h1>/gi, '');
-            
             cleanedContent = cleanedContent.replace(/<(div|p|section|aside)[^>]*>\s*(태그|관련 태그|TAGS)\s*:[\s\S]*?<\/\1>/gi, '');
             cleanedContent = cleanedContent.replace(/^\s*(태그|관련 태그|TAGS)\s*:.*$/gim, '');
-            
             cleanedContent = cleanedContent.replace(/^<h[2-3]>.+?<\/[hH][2-3]>/, '').trim();
 
             return cleanedContent.trim();
@@ -2630,7 +2712,7 @@
                     const keyword = keywords[i];
                     if (!isProcessRunning) throw new Error('작업 중지됨');
                     updateProgress((i / keywords.length) * 100, `"${keyword}" 키워드로 주제 생성 중...`);
-                                       const prompt = `당신은 SEO 전문가이자 콘텐츠 전략가입니다. 핵심 키워드 "${keyword}"(을)를 바탕으로, 구글 검색에 최적화되고 사용자의 흥미를 끌 만한 블로그 글 주제 10~15가지를 생성해주세요. 각 주제는 이전 주제와 중복되지 않아야 하며, 구체적이고 매력적이어야 합니다. **매우 중요: 서론이나 번호 없이, 오직 각 주제를 줄바꿈으로 구분한 목록만 제공해주세요.**`;
+                    const prompt = `당신은 SEO 전문가이자 콘텐츠 전략가입니다. 핵심 키워드 "${keyword}"(을)를 바탕으로, 구글 검색에 최적화되고 사용자의 흥미를 끌 만한 블로그 글 주제 10~15가지를 생성해주세요. 각 주제는 이전 주제와 중복되지 않아야 하며, 구체적이고 매력적이어야 합니다. **매우 중요: 서론이나 번호 없이, 오직 각 주제를 줄바꿈으로 구분한 목록만 제공해주세요.**`;
                     const topicsText = await geminiFetch('gemini-2.5-flash-preview-05-20', prompt);
                     const topics = topicsText.split('\n').filter(t => {
                         const trimmed = t.trim();
@@ -2686,8 +2768,8 @@
                         listItem.classList.remove('selected');
                     }
                     updateSelectedTopicCount();
-                    validateScheduleSettings(); // 실시간 검증
-                    updateBulkDateInfo(); // 날짜 정보 업데이트
+                    validateScheduleSettings();
+                    updateBulkDateInfo();
                 });
             });
             
@@ -2802,6 +2884,8 @@
             manualContentInput.value = '';
             manualLabelsInput.value = '';
             manualPublishTimeInput.value = '';
+            manualPermalinkInput.value = '';
+            manualPermalinkPreview.classList.add('hidden');
             showManualCodeView();
         }
 
@@ -2810,6 +2894,7 @@
             const content = manualContentInput.value.trim();
             const labelsText = manualLabelsInput.value.trim();
             const publishTime = manualPublishTimeInput.value;
+            const permalink = manualPermalinkInput.value.trim();
 
             if (!title || !content) {
                 showStatusMessage('제목과 본문을 모두 입력해주세요.', 'error');
@@ -2829,6 +2914,15 @@
                 labels: processedLabels
             };
             
+            // 퍼머링크 추가
+            if (permalink) {
+                const formattedPermalink = formatPermalink(permalink);
+                if (formattedPermalink) {
+                    postData.url = `${selectedBlogUrl}${formattedPermalink}.html`;
+                    addLog(`🔗 퍼머링크 설정: ${formattedPermalink}`, 'info');
+                }
+            }
+            
             initLog();
             progressContainer.classList.remove('hidden');
             addLog(`📝 수동 포스팅 시작: "${title}"`, 'info');
@@ -2842,7 +2936,7 @@
             progressContainer.classList.add('hidden');
         }
         
-        async function createAIPost(topic, instructions, shouldGenerateImage) {
+        async function createAIPost(topic, instructions, shouldGenerateImage, customPermalink = null) {
             const steps = shouldGenerateImage ? 4 : 3;
             let currentStep = 0;
             
@@ -2855,15 +2949,6 @@
                 
                 **지침:**
                 ${instructions}
-                
-                **중요 규칙:**
-                - 반드시 HTML 코드만 제공하세요
-                - 절대 h1 태그는 사용하지 마세요
-                - 목차는 반드시 네온 그라데이션 스타일로 1번만
-                - 목차는 문서에 단 1번만 나와야 합니다
-                - 각 섹션은 중복 없이 1번씩만 출력하세요
-                - 글자수는 10000자 이상 충실히 작성하세요
-                - 마지막에 면책문구와 요약글 각 박스에 나온다. 
             `;
             
             let dots = 0;
@@ -2909,7 +2994,7 @@
                         
                         currentStep++;
                         updateProgress((currentStep/steps) * 100, `단계 ${currentStep}/${steps}: 이미지 ${i+1}/${imagePrompts.length} 생성`);
-                        addLog(`🎨 Pollinations AI 이미지 생성 시작: "${p.substring(0, 30)}..."`, 'info');
+                        addLog(`🎨 flux AI 이미지 생성 시작: "${p.substring(0, 30)}..."`, 'info');
                         
                         const imageUrl = await generatePollinationsImage(p);
                         imageUrls.push({ url: imageUrl, alt: p });
@@ -2977,7 +3062,18 @@
                 updateProgress(100, `✅ 모든 콘텐츠 생성 완료!`);
                 currentStatusEl.textContent = '모든 콘텐츠 생성 완료!';
                 
-                return { title: topic, content: finalContent, labels: processedLabels };
+                const postData = { title: topic, content: finalContent, labels: processedLabels };
+                
+                // 퍼머링크 추가
+                if (customPermalink) {
+                    const formattedPermalink = formatPermalink(customPermalink);
+                    if (formattedPermalink) {
+                        postData.url = `${selectedBlogUrl}${formattedPermalink}.html`;
+                        addLog(`🔗 퍼머링크 설정: ${formattedPermalink}`, 'info');
+                    }
+                }
+                
+                return postData;
                 
             } catch (error) {
                 clearInterval(writingInterval);
@@ -2990,6 +3086,7 @@
             const publishTime = aiPublishTimeInput.value;
             const instructions = writingInstructionsInput.value.trim();
             const shouldGenerateImage = generateImageCheckboxSingle.checked;
+            const permalink = aiPermalinkInput.value.trim();
 
             if (!topic) {
                 showStatusMessage('글 주제를 입력해주세요.', 'error');
@@ -3041,11 +3138,14 @@
             try {
                 addLog('🚀 AI 포스팅 프로세스 시작', 'info');
                 addLog(`📋 주제: "${topic}"`, 'info');
-                addLog(`🖼️ 이미지 생성: ${shouldGenerateImage ? 'Pollinations.ai 사용' : '아니오'}`, 'info');
+                addLog(`🖼️ 이미지 생성: ${shouldGenerateImage ? 'flux 사용' : '아니오'}`, 'info');
+                if (permalink) {
+                    addLog(`🔗 퍼머링크: ${formatPermalink(permalink)}`, 'info');
+                }
                 
                 currentStatusEl.textContent = 'AI 포스팅 프로세스 시작...';
                 
-                const postData = await createAIPost(topic, instructions, shouldGenerateImage);
+                const postData = await createAIPost(topic, instructions, shouldGenerateImage, permalink);
                 
                 addLog('📤 블로그에 발행 중...', 'info');
                 updateProgress(95, '블로그에 글을 발행하는 중...');
@@ -3060,6 +3160,8 @@
                 updateProgress(100, '✅ 완료!');
                 currentStatusEl.textContent = '포스팅 완료!';
                 postTopicInput.value = '';
+                aiPermalinkInput.value = '';
+                aiPermalinkPreview.classList.add('hidden');
                 
                 clearInterval(timerInterval);
                 const totalElapsed = Math.floor((Date.now() - globalStartTime) / 1000);
@@ -3081,7 +3183,7 @@
             }
         }
         
-        // === 🎯 스마트 대량 예약 로직 (시작 날짜 반영) ===
+        // === 스마트 대량 예약 로직 (시작 날짜 반영) ===
         async function handleBulkSchedule() {
             const selectedCheckboxes = Array.from(topicIdeasList.querySelectorAll('input[type="checkbox"]:checked'));
             let selectedTopics = selectedCheckboxes.map(cb => cb.value);
@@ -3144,11 +3246,9 @@
 
             showStatusMessage('기존 예약 현황을 확인하는 중...', 'info');
             
-            // 스마트 스케줄 생성 (충돌 시간 자동 건너뛰기, 시작 날짜 반영)
             const scheduleResult = await createSmartSchedule(selectedTopics, times, days, shouldGenerateImages, startDate);
             const { bulkQueue, skippedSlots, processedTopics } = scheduleResult;
 
-            // 건너뛴 슬롯이 있을 때 상세 안내
             if (skippedSlots.length > 0) {
                 let skipMessage = `⚠️ 다음 시간대는 자동으로 건너뛰었습니다:\n\n`;
                 
@@ -3189,7 +3289,6 @@
                 }
             }
 
-            // 제목 중복 체크
             const duplicateTopics = bulkQueue.map(job => job.topic).filter(topic => 
                 scheduledPostTitles.has(topic.toLowerCase())
             );
@@ -3363,7 +3462,7 @@
                                 timerContainer.innerHTML = `⏳ 대기 시간: ${remainingMinutes}분 ${remainingSecondsOnly}초 남음`;
                             }
                         }
-                    }, 1000); // 1초마다 업데이트
+                    }, 1000);
                 } else {
                     processBulkScheduleQueue();
                 }
