@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>스타일러프로 API 블로그 자동 포스팅 - by 디지털노마드</title>
+    <title>스타일러프로 API 블로그 자동 포스팅 v4.0 - by 디지털노마드</title>
     <!-- Google Identity Services Library -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Tailwind CSS -->
@@ -464,6 +464,118 @@
             color: #64748b;
             margin-top: 4px;
         }
+
+        /* Google Search API 관련 스타일 추가 */
+        .search-usage-info {
+            background-color: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+        
+        .search-toggle-section {
+            background-color: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        
+        .search-result-preview {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 8px;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .search-quota-warning {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #92400e;
+        }
+        
+        .search-status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .search-status-active {
+            color: #22c55e;
+        }
+        
+        .search-status-inactive {
+            color: #ef4444;
+        }
+        
+        /* 검색 결과 표시 스타일 */
+        .search-result-item {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 4px 0;
+        }
+        
+        .search-result-title {
+            font-weight: bold;
+            color: #1e40af;
+            font-size: 13px;
+        }
+        
+        .search-result-url {
+            color: #059669;
+            font-size: 11px;
+            text-decoration: none;
+        }
+        
+        .search-result-snippet {
+            color: #4b5563;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        /* 실시간 검색 상태 표시 */
+        .search-progress-indicator {
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+            background-size: 200% 100%;
+            animation: searchGradient 2s linear infinite;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        @keyframes searchGradient {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .search-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
@@ -549,6 +661,40 @@
                         </div>
                         <p class="text-xs text-gray-500 mt-1">이미지 생성까지 자동 (이미지 무료, API 키)</p>
                     </div>
+                    
+                    <!-- Google Search API 설정 추가 -->
+                    <div class="border-t pt-4">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3">🔍 Google Search API 설정 (선택사항)</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label for="google-search-api-key-input" class="block text-sm font-medium">Google Search API 키</label>
+                                <div class="relative mt-1">
+                                    <input type="password" id="google-search-api-key-input" class="block w-full px-3 py-2 border rounded-md pr-10" placeholder="AIza... (GCP에서 발급)">
+                                    <button type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600" data-toggle-for="google-search-api-key-input">
+                                        <i data-lucide="eye" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">하루 100회 무료 검색 가능</p>
+                            </div>
+                            <div>
+                                <label for="google-search-cx-input" class="block text-sm font-medium">검색 엔진 ID (CX)</label>
+                                <div class="relative mt-1">
+                                    <input type="password" id="google-search-cx-input" class="block w-full px-3 py-2 border rounded-md pr-10" placeholder="123... (프로그래밍 검색 엔진에서 발급)">
+                                    <button type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600" data-toggle-for="google-search-cx-input">
+                                        <i data-lucide="eye" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="search-usage-info">
+                                <p class="text-xs">
+                                    <strong>💡 Google Search API 사용 안내:</strong><br>
+                                    • 최신 정보 검색으로 AI 글의 정확도 향상<br>
+                                    • 하루 100회 무료 (초과 시 $5/1000회)<br>
+                                    • 설정하지 않아도 기본 AI 포스팅 가능
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <button id="save-settings-button" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                     설정 저장
@@ -568,6 +714,11 @@
                         </div>
                          <div>
                             <p><strong>Gemini API 키:</strong><br><a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-500">Google AI Studio</a>에서 발급받습니다. 텍스트 생성에만 사용되며, 이미지는 Pollinations.ai를 통해 무료로 생성됩니다.</p>
+                        </div>
+                        <div>
+                            <p><strong>Google Search API 키 & 검색 엔진 ID:</strong><br>
+                            1. <a href="https://console.cloud.google.com/" target="_blank" class="text-blue-500">Google Cloud Console</a>에서 'Custom Search API' 활성화 후 API 키 발급<br>
+                            2. <a href="https://programmablesearchengine.google.com/" target="_blank" class="text-blue-500">Programmable Search Engine</a>에서 검색 엔진 생성 후 CX ID 복사</p>
                         </div>
                     </div>
                 </details>
@@ -626,6 +777,23 @@
             
             <!-- 실시간 시계 표시 -->
             <div id="realtime-clock" class="text-center text-sm realtime-clock"></div>
+            
+            <!-- Google Search API 상태 표시 -->
+            <div id="search-api-status" class="hidden bg-white/10 rounded-lg p-2 mt-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">🔍 Google Search API</span>
+                    <div class="flex items-center gap-2">
+                        <span id="search-status-indicator" class="search-status-indicator">
+                            <span class="search-status-dot">●</span>
+                            <span id="search-status-text">준비</span>
+                        </span>
+                        <span id="search-quota-display" class="text-xs font-bold"></span>
+                    </div>
+                </div>
+                <div id="search-daily-progress" class="w-full bg-white/20 rounded-full h-1 mt-1">
+                    <div id="search-usage-bar" class="bg-green-400 h-1 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+            </div>
             
             <!-- 토큰 상태 표시 영역 -->
             <div id="token-status-bar" class="bg-white/10 rounded-lg p-2 hidden mt-2">
@@ -745,13 +913,34 @@
                     
                     <div>
                         <label for="schedule-delay-input" class="block text-sm font-medium">포스트 간 대기 시간 (분)</label>
-                        <input type="number" id="schedule-delay-input" value="5" min="1" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                        <input type="number" id="schedule-delay-input" value="2" min="1" class="mt-1 block w-full px-3 py-2 border rounded-md">
                         <p class="text-xs text-gray-500 mt-1">각 포스트 작성 사이의 대기 시간입니다. 서버 부하를 줄이기 위해 사용됩니다.</p>
                     </div>
                     <div class="flex items-center">
                         <input type="checkbox" id="generate-image-checkbox-bulk" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
                         <label for="generate-image-checkbox-bulk" class="ml-2 block text-sm font-medium">AI로 이미지 생성하기 (무료)</label>
                     </div>
+                    
+                    <!-- Google Search 사용 옵션 (대량) -->
+                    <div class="search-toggle-section">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="use-google-search-bulk" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <label for="use-google-search-bulk" class="ml-2 block text-sm font-medium">
+                                🔍 Google 검색으로 최신 정보 확인
+                            </label>
+                        </div>
+                        <div id="bulk-search-info" class="mt-2 p-2 bg-blue-50 rounded text-xs hidden">
+                            <p><strong>검색 기능 활성화됨:</strong></p>
+                            <p>• 각 포스팅마다 최신 자료를 검색합니다</p>
+                            <p>• 검색 → 글 작성 → 포스팅 순서로 진행</p>
+                            <p>• 남은 무료 검색: <span id="bulk-remaining-searches">100</span>/100회</p>
+                        </div>
+                        <div id="bulk-search-quota-warning" class="search-quota-warning hidden">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 inline mr-1"></i>
+                            <span id="bulk-search-warning-text"></span>
+                        </div>
+                    </div>
+                    
                     <button id="preview-schedule-button" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
                         <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
                         <span>예약 일정 미리보기</span>
@@ -801,6 +990,18 @@
                     <input type="checkbox" id="generate-image-checkbox-single" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
                     <label for="generate-image-checkbox-single" class="ml-2 block text-sm font-medium">AI로 이미지 생성하기 (무료)</label>
                 </div>
+                
+                <!-- Google Search 사용 옵션 (단일) -->
+                <div class="search-toggle-section">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="use-google-search-single" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <label for="use-google-search-single" class="ml-2 block text-sm font-medium">
+                            🔍 Google 검색으로 최신 정보 확인
+                        </label>
+                    </div>
+                    <div id="single-search-result-preview" class="search-result-preview hidden"></div>
+                </div>
+                
                 <div class="flex space-x-2">
                     <button id="ai-publish-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
                         <span id="ai-publish-button-text">AI로 포스팅 실행</span>
@@ -863,6 +1064,12 @@
                 <ul id="scheduled-list-ul" class="space-y-3"></ul>
             </div>
             
+            <!-- 검색 진행 상태 표시 (새로 추가) -->
+            <div id="search-progress-indicator" class="search-progress-indicator hidden">
+                <div class="search-spinner"></div>
+                <span id="search-progress-text">Google에서 자료 검색 중...</span>
+            </div>
+            
             <!-- 공통 UI 요소: 로그 컨테이너 -->
             <div id="progress-container" class="mt-4 hidden">
                 <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 mb-3">
@@ -903,6 +1110,8 @@
     <script>
         let CLIENT_ID = null;
         let GEMINI_API_KEY = null;
+        let GOOGLE_SEARCH_API_KEY = null;
+        let GOOGLE_SEARCH_CX = null;
         let WRITING_INSTRUCTIONS = null;
         let accessToken = null;
         let selectedBlogId = null;
@@ -924,6 +1133,11 @@
         let waitingInterval = null;
         let realtimeClockInterval = null;
         let nextPostingTimeInterval = null;
+        let currentSearchJob = null;
+        
+        // Google Search API 관련 변수
+        let searchUsageToday = { date: new Date().toDateString(), count: 0 };
+        const SEARCH_DAILY_LIMIT = 100;
         
         // 토큰 관리 변수
         let tokenExpiryTime = null;
@@ -942,6 +1156,8 @@
         const blogSelectionView = document.getElementById('blog-selection-view');
         const clientIdInput = document.getElementById('client-id-input');
         const geminiApiKeyInput = document.getElementById('gemini-api-key-input');
+        const googleSearchApiKeyInput = document.getElementById('google-search-api-key-input');
+        const googleSearchCxInput = document.getElementById('google-search-cx-input');
         const saveSettingsButton = document.getElementById('save-settings-button');
         const settingsErrorEl = document.getElementById('settings-error');
         const googleLoginContainer = document.getElementById('google-login-container');
@@ -984,6 +1200,11 @@
         const schedulePreviewContainer = document.getElementById('schedule-preview-container');
         const schedulePreview = document.getElementById('schedule-preview');
         const generateImageCheckboxBulk = document.getElementById('generate-image-checkbox-bulk');
+        const useGoogleSearchBulk = document.getElementById('use-google-search-bulk');
+        const bulkSearchInfo = document.getElementById('bulk-search-info');
+        const bulkRemainingSearches = document.getElementById('bulk-remaining-searches');
+        const bulkSearchQuotaWarning = document.getElementById('bulk-search-quota-warning');
+        const bulkSearchWarningText = document.getElementById('bulk-search-warning-text');
 
         const postTopicInput = document.getElementById('post-topic-input');
         const writingInstructionsInput = document.getElementById('writing-instructions-input');
@@ -991,6 +1212,8 @@
         const aiPublishTimeInput = document.getElementById('ai-publish-time-input');
         const aiPublishButton = document.getElementById('ai-publish-button');
         const generateImageCheckboxSingle = document.getElementById('generate-image-checkbox-single');
+        const useGoogleSearchSingle = document.getElementById('use-google-search-single');
+        const singleSearchResultPreview = document.getElementById('single-search-result-preview');
         const aiPermalinkInput = document.getElementById('ai-permalink-input');
         const aiPermalinkPreview = document.getElementById('ai-permalink-preview');
         
@@ -1023,6 +1246,14 @@
         const queueInfo = document.getElementById('queue-info');
         const pauseResumeBtn = document.getElementById('pause-resume-btn');
         const clearQueueBtn = document.getElementById('clear-queue-btn');
+        
+        const searchApiStatus = document.getElementById('search-api-status');
+        const searchStatusIndicator = document.getElementById('search-status-indicator');
+        const searchStatusText = document.getElementById('search-status-text');
+        const searchQuotaDisplay = document.getElementById('search-quota-display');
+        const searchUsageBar = document.getElementById('search-usage-bar');
+        const searchProgressIndicator = document.getElementById('search-progress-indicator');
+        const searchProgressText = document.getElementById('search-progress-text');
         
         const tokenStatusBar = document.getElementById('token-status-bar');
         const tokenTimer = document.getElementById('token-timer');
@@ -1212,10 +1443,181 @@
                 previewElement.classList.add('hidden');
             }
         }
+        
+        // Google Search API 관련 함수들 (개선된 버전)
+        function loadSearchUsage() {
+            const saved = localStorage.getItem('googleSearchUsage');
+            if (saved) {
+                searchUsageToday = JSON.parse(saved);
+                const today = new Date().toDateString();
+                if (searchUsageToday.date !== today) {
+                    searchUsageToday = { date: today, count: 0 };
+                    saveSearchUsage();
+                }
+            }
+            updateSearchQuotaDisplay();
+        }
+        
+        function saveSearchUsage() {
+            localStorage.setItem('googleSearchUsage', JSON.stringify(searchUsageToday));
+        }
+        
+        function updateSearchQuotaDisplay() {
+            if (GOOGLE_SEARCH_API_KEY && GOOGLE_SEARCH_CX) {
+                searchApiStatus.classList.remove('hidden');
+                const remaining = SEARCH_DAILY_LIMIT - searchUsageToday.count;
+                const usagePercent = (searchUsageToday.count / SEARCH_DAILY_LIMIT) * 100;
+                
+                searchQuotaDisplay.textContent = `${remaining}/${SEARCH_DAILY_LIMIT}회`;
+                searchUsageBar.style.width = `${usagePercent}%`;
+                
+                // 사용량에 따른 색상 변경
+                if (usagePercent >= 90) {
+                    searchUsageBar.style.backgroundColor = '#ef4444';
+                } else if (usagePercent >= 70) {
+                    searchUsageBar.style.backgroundColor = '#f59e0b';
+                } else {
+                    searchUsageBar.style.backgroundColor = '#22c55e';
+                }
+                
+                // 대량 예약 정보 업데이트
+                if (bulkRemainingSearches) {
+                    bulkRemainingSearches.textContent = remaining;
+                }
+                
+                // 대량 예약 경고 메시지 업데이트
+                if (useGoogleSearchBulk.checked) {
+                    const selectedCount = topicIdeasList ? topicIdeasList.querySelectorAll('input[type="checkbox"]:checked').length : 0;
+                    if (selectedCount > remaining) {
+                        bulkSearchQuotaWarning.classList.remove('hidden');
+                        bulkSearchWarningText.textContent = `⚠️ 선택한 주제(${selectedCount}개)가 남은 검색 횟수(${remaining}회)를 초과합니다. 처음 ${remaining}개만 검색이 적용되고, 나머지는 검색 없이 진행됩니다.`;
+                    } else {
+                        bulkSearchQuotaWarning.classList.add('hidden');
+                    }
+                }
+            } else {
+                searchApiStatus.classList.add('hidden');
+            }
+        }
+        
+        function updateSearchStatus(status, text) {
+            if (!searchStatusIndicator) return;
+            
+            const statusDot = searchStatusIndicator.querySelector('.search-status-dot');
+            searchStatusText.textContent = text;
+            
+            switch (status) {
+                case 'active':
+                    searchStatusIndicator.classList.add('search-status-active');
+                    searchStatusIndicator.classList.remove('search-status-inactive');
+                    statusDot.style.color = '#22c55e';
+                    break;
+                case 'inactive':
+                    searchStatusIndicator.classList.remove('search-status-active');
+                    searchStatusIndicator.classList.add('search-status-inactive');
+                    statusDot.style.color = '#ef4444';
+                    break;
+                case 'searching':
+                    statusDot.style.color = '#3b82f6';
+                    break;
+            }
+        }
+        
+        async function searchGoogle(query, jobIndex = null, totalJobs = null) {
+            if (!GOOGLE_SEARCH_API_KEY || !GOOGLE_SEARCH_CX) {
+                addLog('⚠️ Google Search API가 설정되지 않아 검색을 건너뜁니다', 'warn');
+                return null;
+            }
+            
+            // 일일 한도 체크
+            if (searchUsageToday.count >= SEARCH_DAILY_LIMIT) {
+                addLog('⚠️ 일일 검색 한도(100회)를 초과했습니다. 검색 없이 진행합니다.', 'warn');
+                return null;
+            }
+            
+            try {
+                // 검색 진행 상태 표시
+                if (searchProgressIndicator) {
+                    searchProgressIndicator.classList.remove('hidden');
+                    if (jobIndex && totalJobs) {
+                        searchProgressText.textContent = `Google 검색 중... (${jobIndex}/${totalJobs}) "${query.substring(0, 30)}..."`;
+                    } else {
+                        searchProgressText.textContent = `Google에서 "${query.substring(0, 30)}..." 검색 중...`;
+                    }
+                }
+                
+                updateSearchStatus('searching', '검색중');
+                
+                const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_SEARCH_API_KEY}&cx=${GOOGLE_SEARCH_CX}&q=${encodeURIComponent(query)}&num=8`;
+                
+                addLog(`🔍 Google 검색 시작: "${query}"`, 'info');
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || `검색 실패: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // 사용량 증가
+                searchUsageToday.count++;
+                saveSearchUsage();
+                updateSearchQuotaDisplay();
+                
+                if (!data.items || data.items.length === 0) {
+                    addLog('검색 결과가 없습니다', 'info');
+                    return null;
+                }
+                
+                // 검색 결과 포맷팅 (더 상세하게)
+                const formattedResults = data.items.slice(0, 8).map((item, index) => {
+                    return `[검색결과 ${index + 1}]
+제목: ${item.title}
+URL: ${item.link}
+내용: ${item.snippet}
+---`;
+                }).join('\n');
+                
+                addLog(`✅ ${data.items.length}개의 검색 결과를 찾았습니다 (사용: ${searchUsageToday.count}/${SEARCH_DAILY_LIMIT})`, 'success');
+                
+                // 단일 포스팅 모드에서 미리보기 표시
+                if (singleSearchResultPreview && !singleSearchResultPreview.classList.contains('hidden')) {
+                    singleSearchResultPreview.innerHTML = `
+                        <strong>🔍 검색 결과 미리보기:</strong><br>
+                        ${data.items.slice(0, 3).map((item, index) => `
+                            <div class="search-result-item">
+                                <div class="search-result-title">${index + 1}. ${item.title}</div>
+                                <a href="${item.link}" target="_blank" class="search-result-url">${item.link}</a>
+                                <div class="search-result-snippet">${item.snippet}</div>
+                            </div>
+                        `).join('')}
+                    `;
+                }
+                
+                updateSearchStatus('active', '완료');
+                
+                return formattedResults;
+                
+            } catch (error) {
+                console.error('Google 검색 실패:', error);
+                addLog(`❌ 검색 실패: ${error.message}`, 'error');
+                updateSearchStatus('inactive', '오류');
+                return null;
+            } finally {
+                // 검색 진행 상태 숨기기
+                if (searchProgressIndicator) {
+                    setTimeout(() => {
+                        searchProgressIndicator.classList.add('hidden');
+                    }, 1000);
+                }
+            }
+        }
    
         // --- 초기화 및 뷰 관리 ---
         window.onload = () => {
             loadSettings();
+            loadSearchUsage();
             if (CLIENT_ID && GEMINI_API_KEY) {
                 googleLoginContainer.classList.remove('hidden');
                 initializeGsi();
@@ -1253,6 +1655,30 @@
             pauseResumeBtn.addEventListener('click', handlePauseResume);
             clearQueueBtn.addEventListener('click', handleClearQueue);
             tabs.addEventListener('click', handleTabClick);
+            
+            // Google Search 체크박스 이벤트 (개선)
+            useGoogleSearchSingle.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    singleSearchResultPreview.classList.remove('hidden');
+                    updateSearchStatus('active', '준비');
+                } else {
+                    singleSearchResultPreview.classList.add('hidden');
+                    singleSearchResultPreview.innerHTML = '';
+                    updateSearchStatus('inactive', '끔');
+                }
+            });
+            
+            useGoogleSearchBulk.addEventListener('change', (e) => {
+                updateSearchQuotaDisplay();
+                if (e.target.checked) {
+                    bulkSearchInfo.classList.remove('hidden');
+                    updateSearchStatus('active', '준비');
+                } else {
+                    bulkSearchInfo.classList.add('hidden');
+                    bulkSearchQuotaWarning.classList.add('hidden');
+                    updateSearchStatus('inactive', '끔');
+                }
+            });
             
             // 퍼머링크 입력 이벤트 리스너 추가
             if (aiPermalinkInput) {
@@ -1292,6 +1718,7 @@
                 if (e.target.classList.contains('topic-checkbox')) {
                     validateScheduleSettings();
                     updateBulkDateInfo();
+                    updateSearchQuotaDisplay();
                 }
             });
 
@@ -1514,7 +1941,7 @@
             }
         }
         
-        async function createSmartSchedule(selectedTopics, times, days, shouldGenerateImages, startDate = null) {
+        async function createSmartSchedule(selectedTopics, times, days, shouldGenerateImages, useGoogleSearch, startDate = null) {
             await fetchScheduledPostsWithTimes();
             
             const bulkQueue = [];
@@ -1560,7 +1987,9 @@
                     bulkQueue.push({
                         topic: selectedTopics[topicIndex],
                         publishDate: publishDate,
-                        generateImage: shouldGenerateImages
+                        generateImage: shouldGenerateImages,
+                        useGoogleSearch: useGoogleSearch,
+                        jobIndex: topicIndex + 1
                     });
                     topicIndex++;
                 }
@@ -1691,6 +2120,7 @@
             updateSelectedTopicCount();
             validateScheduleSettings();
             updateBulkDateInfo();
+            updateSearchQuotaDisplay();
         }
         
         function handleDeselectAllTopics() {
@@ -1702,6 +2132,7 @@
             updateSelectedTopicCount();
             validateScheduleSettings();
             updateBulkDateInfo();
+            updateSearchQuotaDisplay();
         }
         
         // --- 예약 일정 미리보기 함수들 (스마트 버전, 시작 날짜 반영) ---
@@ -1767,7 +2198,7 @@
                 }
             }
             
-            for (let dayOffset = 0; dayOffset < days && topicIndex < topics.length; dayOffset++) {
+                   for (let dayOffset = 0; dayOffset < days && topicIndex < topics.length; dayOffset++) {
                 const currentDate = new Date(startDate);
                 currentDate.setDate(currentDate.getDate() + dayOffset);
                 const dateKey = currentDate.toDateString();
@@ -2272,22 +2703,36 @@
         function loadSettings() {
             CLIENT_ID = localStorage.getItem('bloggerClientId');
             GEMINI_API_KEY = localStorage.getItem('geminiApiKey');
+            GOOGLE_SEARCH_API_KEY = localStorage.getItem('googleSearchApiKey');
+            GOOGLE_SEARCH_CX = localStorage.getItem('googleSearchCx');
+            
             clientIdInput.value = CLIENT_ID || '';
             geminiApiKeyInput.value = GEMINI_API_KEY || '';
+            googleSearchApiKeyInput.value = GOOGLE_SEARCH_API_KEY || '';
+            googleSearchCxInput.value = GOOGLE_SEARCH_CX || '';
         }
 
         async function handleSaveSettings() {
             const clientId = clientIdInput.value.trim();
             const geminiApiKey = geminiApiKeyInput.value.trim();
+            const googleSearchApiKey = googleSearchApiKeyInput.value.trim();
+            const googleSearchCx = googleSearchCxInput.value.trim();
 
             if (!clientId || !geminiApiKey) {
-                settingsErrorEl.textContent = '모든 필드를 입력해주세요.';
+                settingsErrorEl.textContent = '필수 필드를 입력해주세요. (Google OAuth 클라이언트 ID, Gemini API 키)';
                 settingsErrorEl.classList.remove('hidden');
                 return;
             }
 
             localStorage.setItem('bloggerClientId', clientId);
             localStorage.setItem('geminiApiKey', geminiApiKey);
+            
+            // Google Search API는 선택사항
+            if (googleSearchApiKey && googleSearchCx) {
+                localStorage.setItem('googleSearchApiKey', googleSearchApiKey);
+                localStorage.setItem('googleSearchCx', googleSearchCx);
+            }
+            
             loadSettings();
             settingsErrorEl.classList.add('hidden');
             googleLoginContainer.classList.remove('hidden');
@@ -2337,6 +2782,9 @@
                 showView('blog-selection');
                 fetchUserBlogs();
             }
+            
+            // Google Search API 상태 업데이트
+            updateSearchQuotaDisplay();
         }
         
         function handleLogout() {
@@ -2469,6 +2917,7 @@
             writingInstructionsInput.value = WRITING_INSTRUCTIONS;
             showView('posting');
             handleTabClick({ target: document.querySelector('[data-tab="ai-bulk-schedule-mode"]') });
+            updateSearchQuotaDisplay();
         }
         
         function handleSaveInstructions() {
@@ -2712,7 +3161,7 @@
                     const keyword = keywords[i];
                     if (!isProcessRunning) throw new Error('작업 중지됨');
                     updateProgress((i / keywords.length) * 100, `"${keyword}" 키워드로 주제 생성 중...`);
-                    const prompt = `당신은 SEO 전문가이자 콘텐츠 전략가입니다. 핵심 키워드 "${keyword}"(을)를 바탕으로, 구글 검색에 최적화되고 사용자의 흥미를 끌 만한 블로그 글 주제 10~15가지를 생성해주세요. 각 주제는 이전 주제와 중복되지 않아야 하며, 구체적이고 매력적이어야 합니다. **매우 중요: 서론이나 번호 없이, 오직 각 주제를 줄바꿈으로 구분한 목록만 제공해주세요.**`;
+                    const prompt = `당신은 SEO 전문가이자 콘텐츠 전략가입니다. 핵심 키워드 "${keyword}"(을)를 바탕으로, 구글 검색에 최적화되고 사용자의 흥미를 끌 만한 블로그 글 주제 10~15가지를 생성해주세요. 각 주제는 이전 주제와 중복되지 않아야 하며 년도 표기 한다면 2025년 최신 표기 , 구체적이고 매력적이어야 합니다. **매우 중요: 서론이나 번호 없이, 오직 각 주제를 줄바꿈으로 구분한 목록만 제공해주세요.**`;
                     const topicsText = await geminiFetch('gemini-2.5-flash-preview-05-20', prompt);
                     const topics = topicsText.split('\n').filter(t => {
                         const trimmed = t.trim();
@@ -2770,6 +3219,7 @@
                     updateSelectedTopicCount();
                     validateScheduleSettings();
                     updateBulkDateInfo();
+                    updateSearchQuotaDisplay();
                 });
             });
             
@@ -2936,20 +3386,51 @@
             progressContainer.classList.add('hidden');
         }
         
-        async function createAIPost(topic, instructions, shouldGenerateImage, customPermalink = null) {
+        // 🔥 핵심: 대량 작업 시 각 포스팅마다 Google Search API 호출
+        async function createAIPost(topic, instructions, shouldGenerateImage, customPermalink = null, useGoogleSearch = false) {
             const steps = shouldGenerateImage ? 4 : 3;
             let currentStep = 0;
+            
+            // 🔍 각 포스팅마다 Google Search 실행
+            let searchResults = null;
+            if (useGoogleSearch) {
+                currentStep++;
+                updateProgress((currentStep/steps) * 100, `단계 ${currentStep}/${steps}: Google 검색 중...`);
+                addLog(`🔍 "${topic}"에 대한 최신 자료 검색 중...`, 'info');
+                searchResults = await searchGoogle(topic);
+                
+                if (searchResults) {
+                    addLog(`✅ 검색 완료! 최신 정보를 반영하여 글을 작성합니다`, 'success');
+                } else {
+                    addLog(`⚠️ 검색 결과가 없거나 한도 초과. 기본 AI 작성으로 진행`, 'warn');
+                }
+            }
             
             currentStep++;
             updateProgress((currentStep/steps) * 100, `단계 ${currentStep}/${steps}: AI 글 작성`);
             addLog('📝 AI가 글을 작성하기 시작했습니다...', 'info');
             
-            const articlePrompt = `
+            let articlePrompt = `
                 **주제:** ${topic}
                 
                 **지침:**
                 ${instructions}
             `;
+            
+            // 검색 결과가 있으면 프롬프트에 추가
+            if (searchResults) {
+                articlePrompt = `
+                **주제:** ${topic}
+                
+                **참고할 최신 정보:**
+                ${searchResults}
+                
+                **지침:**
+                ${instructions}
+                
+                위의 최신 정보를 참고하여 더욱 정확하고 신뢰성 있는 글을 작성해주세요.
+                `;
+            }
             
             let dots = 0;
             const writingInterval = setInterval(() => {
@@ -3086,6 +3567,7 @@
             const publishTime = aiPublishTimeInput.value;
             const instructions = writingInstructionsInput.value.trim();
             const shouldGenerateImage = generateImageCheckboxSingle.checked;
+            const useGoogleSearch = useGoogleSearchSingle.checked;
             const permalink = aiPermalinkInput.value.trim();
 
             if (!topic) {
@@ -3114,6 +3596,7 @@
             progressContainer.classList.remove('hidden');
 
             const ESTIMATED_TIME = {
+                searchTime: useGoogleSearch ? 5 : 0,
                 contentGeneration: 20,
                 imageGeneration: shouldGenerateImage ? 15 : 0,
                 tagGeneration: 10,
@@ -3139,13 +3622,14 @@
                 addLog('🚀 AI 포스팅 프로세스 시작', 'info');
                 addLog(`📋 주제: "${topic}"`, 'info');
                 addLog(`🖼️ 이미지 생성: ${shouldGenerateImage ? 'flux 사용' : '아니오'}`, 'info');
+                addLog(`🔍 Google 검색: ${useGoogleSearch ? '사용' : '사용 안 함'}`, 'info');
                 if (permalink) {
                     addLog(`🔗 퍼머링크: ${formatPermalink(permalink)}`, 'info');
                 }
                 
                 currentStatusEl.textContent = 'AI 포스팅 프로세스 시작...';
                 
-                const postData = await createAIPost(topic, instructions, shouldGenerateImage, permalink);
+                const postData = await createAIPost(topic, instructions, shouldGenerateImage, permalink, useGoogleSearch);
                 
                 addLog('📤 블로그에 발행 중...', 'info');
                 updateProgress(95, '블로그에 글을 발행하는 중...');
@@ -3162,6 +3646,8 @@
                 postTopicInput.value = '';
                 aiPermalinkInput.value = '';
                 aiPermalinkPreview.classList.add('hidden');
+                singleSearchResultPreview.innerHTML = '';
+                singleSearchResultPreview.classList.add('hidden');
                 
                 clearInterval(timerInterval);
                 const totalElapsed = Math.floor((Date.now() - globalStartTime) / 1000);
@@ -3183,7 +3669,7 @@
             }
         }
         
-        // === 스마트 대량 예약 로직 (시작 날짜 반영) ===
+        // === 스마트 대량 예약 로직 (시작 날짜 반영 + Google Search) ===
         async function handleBulkSchedule() {
             const selectedCheckboxes = Array.from(topicIdeasList.querySelectorAll('input[type="checkbox"]:checked'));
             let selectedTopics = selectedCheckboxes.map(cb => cb.value);
@@ -3192,6 +3678,7 @@
             const daysValue = scheduleDaysInput.value.trim();
             const delayMinutes = parseInt(scheduleDelayInput.value, 10);
             const shouldGenerateImages = generateImageCheckboxBulk.checked;
+            const useGoogleSearch = useGoogleSearchBulk.checked;
             const startDate = bulkStartDateInput.value;
 
             if (selectedTopics.length === 0) {
@@ -3246,7 +3733,7 @@
 
             showStatusMessage('기존 예약 현황을 확인하는 중...', 'info');
             
-            const scheduleResult = await createSmartSchedule(selectedTopics, times, days, shouldGenerateImages, startDate);
+            const scheduleResult = await createSmartSchedule(selectedTopics, times, days, shouldGenerateImages, useGoogleSearch, startDate);
             const { bulkQueue, skippedSlots, processedTopics } = scheduleResult;
 
             if (skippedSlots.length > 0) {
@@ -3330,8 +3817,10 @@
 • 마지막 발행: ${lastJob.publishDate.toLocaleString('ko-KR')}
 • 작업 간 대기: ${delayMinutes}분
 • 이미지 생성: ${shouldGenerateImages ? '예' : '아니오'}
+• Google 검색: ${useGoogleSearch ? '사용 (각 포스팅마다 자료 조사)' : '사용 안 함'}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+${useGoogleSearch ? '🔍 각 포스팅마다 Google Search API로 최신 자료를 조사합니다.\n' : ''}
 🧠 스마트 스케줄링으로 기존 예약과의 충돌을 자동으로 해결했습니다!
 
 이 작업은 완료까지 약 ${Math.ceil(totalBulkJobs * delayMinutes / 60)}시간이 소요될 수 있습니다.
@@ -3351,9 +3840,14 @@
             if (skippedSlots.length > 0) {
                 addLog(`🧠 ${skippedSlots.length}개 시간대를 자동으로 건너뛰었습니다`, 'info');
             }
+            if (useGoogleSearch) {
+                addLog(`🔍 각 포스팅마다 Google 검색으로 최신 정보를 조사합니다`, 'info');
+                addLog(`📊 현재 남은 검색 횟수: ${SEARCH_DAILY_LIMIT - searchUsageToday.count}회`, 'info');
+            }
             processBulkScheduleQueue();
         }
 
+        // 🔥 핵심 함수: 대량 작업 큐 처리 (각 포스팅마다 API 호출)
         async function processBulkScheduleQueue() {
             if (!isProcessRunning || bulkScheduleQueue.length === 0) {
                 if (isProcessRunning && completedBulkJobs === totalBulkJobs) {
@@ -3399,9 +3893,15 @@
             updateQueueStatus();
             
             addLog(`📅 예약 시간: ${publishTimeStr}`, 'info');
+            
+            // 🔍 각 포스팅마다 Google Search 사용 여부 표시
+            if (job.useGoogleSearch) {
+                addLog(`🔍 이 포스팅은 Google 검색을 사용합니다`, 'info');
+            }
 
             try {
-                const postData = await createAIPost(job.topic, WRITING_INSTRUCTIONS, job.generateImage);
+                // 🔥 createAIPost에서 각 포스팅마다 API 호출
+                const postData = await createAIPost(job.topic, WRITING_INSTRUCTIONS, job.generateImage, null, job.useGoogleSearch);
                 await publishPost(postData, job.publishDate.toISOString());
                 
                 scheduledPostTitles.add(job.topic.toLowerCase());
