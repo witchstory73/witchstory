@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -778,6 +777,165 @@
             background-color: #dcfce7;
             color: #166534;
         }
+        
+        /* 멀티 블로그 RSS 스타일 */
+        .multi-blog-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .blog-rss-section {
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+        }
+        
+        .blog-rss-section.has-posts {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        
+        .blog-rss-header {
+            font-weight: bold;
+            font-size: 14px;
+            color: #1f2937;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .blog-post-count {
+            background-color: #3b82f6;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: normal;
+        }
+        
+        .blog-rss-posts {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 8px;
+        }
+        
+        .multi-rss-post-item {
+            padding: 8px;
+            margin: 4px 0;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .multi-rss-post-item:hover {
+            background-color: #e0f2fe;
+            border-color: #3b82f6;
+        }
+        
+        .multi-rss-post-item.selected {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .multi-blog-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .multi-blog-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .multi-blog-fetch-btn {
+            padding: 8px 16px;
+            background-color: #8b5cf6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .multi-blog-fetch-btn:hover {
+            background-color: #7c3aed;
+        }
+        
+        .multi-blog-fetch-btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        
+        .multi-blog-status {
+            background-color: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 12px;
+            font-size: 12px;
+        }
+        
+        .add-blog-url-btn {
+            background-color: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        
+        .add-blog-url-btn:hover {
+            background-color: #059669;
+        }
+        
+        .remove-blog-url-btn {
+            background-color: #ef4444;
+            color: white;
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        
+        .remove-blog-url-btn:hover {
+            background-color: #dc2626;
+        }
+        
+        .multi-blog-selection-info {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 8px;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+        
+        .selected-posts-summary {
+            background-color: #dcfce7;
+            border: 1px solid #86efac;
+            border-radius: 6px;
+            padding: 8px;
+            margin: 8px 0;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
@@ -1064,9 +1222,48 @@
 
             <!-- RSS 내부링크 모드 -->
             <div id="internal-link-mode-content" class="tab-content space-y-4 hidden">
-                <p class="text-sm text-gray-600 dark:text-gray-400">블로그 주소를 입력하면 RSS를 통해 최근 글을 불러옵니다. 4개의 글을 선택하면 AI가 분석하여 최적의 제목과 버튼 텍스트를 생성하고, 고품질 내부링크 포스팅을 생성합니다.</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">최대 4개의 블로그 주소를 입력하고 RSS를 가져온 후, 블로그 개수에 상관없이 총 4개의 포스트를 선택하면 AI가 최적의 내부링크 포스팅을 생성합니다.</p>
                 
-                <div>
+                <!-- 멀티 블로그 입력 영역 -->
+                <div id="multi-blog-inputs">
+                    <label class="block text-sm font-medium mb-2">블로그 주소 입력 (최대 4개)</label>
+                    <div id="blog-url-inputs-container" class="space-y-2">
+                        <div class="multi-blog-input-group">
+                            <input type="url" class="multi-blog-input" placeholder="https://example1.blogspot.com" data-blog-index="0">
+                            <button class="remove-blog-url-btn hidden" onclick="removeBlogInput(0)">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="add-blog-url-btn" class="add-blog-url-btn" onclick="addBlogInput()">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        블로그 추가
+                    </button>
+                    
+                    <button id="fetch-multi-rss-button" class="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-lg">
+                        <i data-lucide="download" class="w-4 h-4 inline mr-1"></i>
+                        모든 블로그 RSS 가져오기
+                    </button>
+                </div>
+                
+                <!-- 멀티 블로그 RSS 결과 표시 영역 -->
+                <div id="multi-blog-rss-container" class="hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold">블로그별 최근 글 (총 4개 선택)</h3>
+                        <span id="multi-selected-posts-count" class="text-sm text-gray-600">0/4 선택됨</span>
+                    </div>
+                    
+                    <div id="multi-blog-status" class="multi-blog-status hidden"></div>
+                    <div id="multi-blog-selection-info" class="multi-blog-selection-info hidden"></div>
+                    
+                    <!-- 선택된 포스트 요약 -->
+                    <div id="selected-posts-summary" class="selected-posts-summary hidden"></div>
+                    
+                    <div id="multi-blog-sections" class="multi-blog-container"></div>
+                </div>
+                
+                <!-- 기존 단일 블로그 입력 (숨김) -->
+                <div id="single-blog-input" class="hidden">
                     <label for="blog-url-input" class="block text-sm font-medium mb-2">블로그 주소</label>
                     <div class="flex gap-2">
                         <input type="url" id="blog-url-input" class="flex-1 px-3 py-2 border rounded-md" placeholder="https://example.blogspot.com">
@@ -1471,6 +1668,13 @@
         let isEditingMainTitle = false;
         let isEditingButtons = false;
         
+        // 멀티 블로그 RSS 관련 변수
+        let multiBlogData = [];
+        let multiBlogPosts = {};
+        let selectedMultiBlogPosts = [];
+        let currentBlogCount = 1;
+        let totalSelectedPosts = 0; // 총 선택된 포스트 수 추적
+        
         // CORS 프록시 서버들
         const corsProxies = [
             'https://api.allorigins.win/get?url=',
@@ -1651,6 +1855,363 @@
 
 위 지침에 따라 주제에 맞는 고품질 블로그 글을 작성해주세요.`;
 
+        // 멀티 블로그 RSS 관련 함수들 (수정)
+        window.addBlogInput = function() {
+            if (currentBlogCount >= 4) {
+                showStatusMessage('최대 4개의 블로그만 추가할 수 있습니다.', 'error');
+                return;
+            }
+            
+            currentBlogCount++;
+            const container = document.getElementById('blog-url-inputs-container');
+            
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'multi-blog-input-group';
+            inputGroup.innerHTML = `
+                <input type="url" class="multi-blog-input" placeholder="https://example${currentBlogCount}.blogspot.com" data-blog-index="${currentBlogCount - 1}">
+                <button class="remove-blog-url-btn" onclick="removeBlogInput(${currentBlogCount - 1})">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            `;
+            
+            container.appendChild(inputGroup);
+            lucide.createIcons();
+            
+            // 첫 번째 입력창의 삭제 버튼 표시
+            const firstRemoveBtn = container.querySelector('.multi-blog-input-group:first-child .remove-blog-url-btn');
+            if (firstRemoveBtn && currentBlogCount > 1) {
+                firstRemoveBtn.classList.remove('hidden');
+            }
+            
+            // 4개가 되면 추가 버튼 숨기기
+            if (currentBlogCount >= 4) {
+                document.getElementById('add-blog-url-btn').style.display = 'none';
+            }
+        }
+        
+        window.removeBlogInput = function(index) {
+            const container = document.getElementById('blog-url-inputs-container');
+            const inputGroups = container.querySelectorAll('.multi-blog-input-group');
+            
+            if (inputGroups.length <= 1) {
+                showStatusMessage('최소 1개의 블로그는 유지해야 합니다.', 'error');
+                return;
+            }
+            
+            // 해당 입력창 제거
+            inputGroups.forEach((group, i) => {
+                const input = group.querySelector('.multi-blog-input');
+                if (input && parseInt(input.dataset.blogIndex) === index) {
+                    group.remove();
+                }
+            });
+            
+            currentBlogCount--;
+            
+            // 인덱스 재정렬
+            const newInputGroups = container.querySelectorAll('.multi-blog-input-group');
+            newInputGroups.forEach((group, i) => {
+                const input = group.querySelector('.multi-blog-input');
+                const removeBtn = group.querySelector('.remove-blog-url-btn');
+                if (input) {
+                    input.dataset.blogIndex = i;
+                    input.placeholder = `https://example${i + 1}.blogspot.com`;
+                }
+                if (removeBtn) {
+                    removeBtn.setAttribute('onclick', `removeBlogInput(${i})`);
+                }
+            });
+            
+            // 1개만 남았을 때 삭제 버튼 숨기기
+            if (newInputGroups.length === 1) {
+                const lastRemoveBtn = newInputGroups[0].querySelector('.remove-blog-url-btn');
+                if (lastRemoveBtn) {
+                    lastRemoveBtn.classList.add('hidden');
+                }
+            }
+            
+            // 추가 버튼 다시 표시
+            if (currentBlogCount < 4) {
+                document.getElementById('add-blog-url-btn').style.display = 'inline-flex';
+            }
+        }
+        
+        // 수정된 멀티 RSS 가져오기 함수
+        async function handleFetchMultiRss() {
+            const blogInputs = document.querySelectorAll('.multi-blog-input');
+            const blogUrls = [];
+            
+            blogInputs.forEach(input => {
+                const url = normalizeUrl(input.value.trim());
+                if (url) {
+                    blogUrls.push({ url, index: parseInt(input.dataset.blogIndex) });
+                }
+            });
+            
+            if (blogUrls.length === 0) {
+                showStatusMessage('최소 1개 이상의 블로그 주소를 입력해주세요.', 'error');
+                return;
+            }
+            
+            const fetchButton = document.getElementById('fetch-multi-rss-button');
+            fetchButton.disabled = true;
+            fetchButton.innerHTML = '<i data-lucide="loader" class="w-4 h-4 inline mr-1 animate-spin"></i> 로딩 중...';
+            
+            multiBlogData = [];
+            multiBlogPosts = {};
+            selectedMultiBlogPosts = [];
+            totalSelectedPosts = 0;
+            
+            try {
+                showStatusMessage(`${blogUrls.length}개 블로그에서 RSS 피드를 가져오는 중...`, 'info');
+                
+                const fetchPromises = blogUrls.map(async (blogInfo) => {
+                    const rssUrls = generateRssUrls(blogInfo.url);
+                    let posts = [];
+                    
+                    for (const rssUrl of rssUrls) {
+                        for (const proxyUrl of corsProxies) {
+                            try {
+                                const rssData = await fetchRssWithProxy(rssUrl, proxyUrl);
+                                posts = parseRss(rssData);
+                                if (posts.length > 0) break;
+                            } catch (error) {
+                                continue;
+                            }
+                        }
+                        if (posts.length > 0) break;
+                    }
+                    
+                    return {
+                        url: blogInfo.url,
+                        index: blogInfo.index,
+                        posts: posts
+                    };
+                });
+                
+                const results = await Promise.all(fetchPromises);
+                
+                let totalPosts = 0;
+                results.forEach(result => {
+                    if (result.posts.length > 0) {
+                        multiBlogData.push(result);
+                        multiBlogPosts[result.index] = result.posts;
+                        totalPosts += result.posts.length;
+                    }
+                });
+                
+                if (multiBlogData.length === 0) {
+                    throw new Error('RSS 피드를 가져올 수 없습니다.');
+                }
+                
+                showStatusMessage(`✅ ${multiBlogData.length}개 블로그에서 총 ${totalPosts}개의 포스트를 가져왔습니다!`, 'success');
+                displayMultiBlogPosts();
+                
+            } catch (error) {
+                console.error('멀티 RSS 가져오기 실패:', error);
+                showStatusMessage('RSS 피드를 가져올 수 없습니다. 올바른 블로그 주소를 입력해주세요.', 'error');
+            } finally {
+                fetchButton.disabled = false;
+                fetchButton.innerHTML = '<i data-lucide="download" class="w-4 h-4 inline mr-1"></i> 모든 블로그 RSS 가져오기';
+                lucide.createIcons();
+            }
+        }
+        
+        // 수정된 멀티 블로그 포스트 표시 함수
+        function displayMultiBlogPosts() {
+            const container = document.getElementById('multi-blog-rss-container');
+            const sectionsContainer = document.getElementById('multi-blog-sections');
+            
+            container.classList.remove('hidden');
+            sectionsContainer.innerHTML = '';
+            
+            multiBlogData.forEach((blogData, blogIndex) => {
+                const section = document.createElement('div');
+                section.className = 'blog-rss-section';
+                section.dataset.blogUrl = blogData.url;
+                section.dataset.blogIndex = blogData.index;
+                
+                const headerHtml = `
+                    <div class="blog-rss-header">
+                        <span>${blogData.url.replace(/https?:\/\//, '').substring(0, 30)}...</span>
+                        <span class="blog-post-count">${blogData.posts.length}개</span>
+                    </div>
+                `;
+                
+                const postsHtml = `
+                    <div class="blog-rss-posts">
+                        ${blogData.posts.slice(0, 25).map((post, postIndex) => {
+                            const dateStr = post.pubDate ? new Date(post.pubDate).toLocaleDateString('ko-KR') : '';
+                            return `
+                                <div class="multi-rss-post-item" data-blog-index="${blogData.index}" data-post-index="${postIndex}">
+                                    <input type="checkbox" id="multi-post-${blogData.index}-${postIndex}" 
+                                           data-blog-url="${blogData.url}"
+                                           data-blog-index="${blogData.index}"
+                                           data-title="${post.title.replace(/"/g, '&quot;')}" 
+                                           data-link="${post.link}">
+                                    <label for="multi-post-${blogData.index}-${postIndex}" style="cursor: pointer; flex: 1;">
+                                        <div style="font-weight: 600; font-size: 13px; color: #1e40af;">${post.title}</div>
+                                        <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${dateStr}</div>
+                                    </label>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                
+                section.innerHTML = headerHtml + postsHtml;
+                sectionsContainer.appendChild(section);
+            });
+            
+            // 체크박스 이벤트 리스너 추가
+            sectionsContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', handleMultiBlogPostSelection);
+            });
+            
+            updateMultiSelectedPostsCount();
+        }
+        
+        // 완전히 새로운 선택 로직
+        function handleMultiBlogPostSelection(e) {
+            const checkbox = e.target;
+            
+            if (checkbox.checked) {
+                // 이미 4개 선택되어 있으면 추가 선택 불가
+                if (totalSelectedPosts >= 4) {
+                    checkbox.checked = false;
+                    showStatusMessage('최대 4개까지만 선택할 수 있습니다.', 'warn');
+                    return;
+                }
+                
+                const postItem = checkbox.closest('.multi-rss-post-item');
+                postItem.classList.add('selected');
+                
+                // 선택된 포스트 추가
+                const postData = {
+                    blogUrl: checkbox.dataset.blogUrl,
+                    blogIndex: checkbox.dataset.blogIndex,
+                    title: checkbox.dataset.title,
+                    link: checkbox.dataset.link
+                };
+                
+                selectedMultiBlogPosts.push(postData);
+                totalSelectedPosts++;
+                
+            } else {
+                const postItem = checkbox.closest('.multi-rss-post-item');
+                postItem.classList.remove('selected');
+                
+                // 선택 해제
+                selectedMultiBlogPosts = selectedMultiBlogPosts.filter(p => 
+                    !(p.link === checkbox.dataset.link && p.blogUrl === checkbox.dataset.blogUrl)
+                );
+                totalSelectedPosts--;
+            }
+            
+            updateMultiSelectedPostsCount();
+            updateSelectedPostsSummary();
+            
+            // 4개 선택 시 처리
+            if (totalSelectedPosts === 4) {
+                selectedRssPosts = selectedMultiBlogPosts.map(p => ({
+                    title: p.title,
+                    link: p.link
+                }));
+                
+                generateMainTitle();
+                generateButtonTexts();
+                document.getElementById('internal-link-config').classList.remove('hidden');
+                document.getElementById('internal-char-count-info').classList.remove('hidden');
+                setupTitleAndButtonEditing();
+                
+                // 선택 정보 표시
+                const selectionInfo = document.getElementById('multi-blog-selection-info');
+                if (selectionInfo) {
+                    const blogCounts = {};
+                    selectedMultiBlogPosts.forEach(post => {
+                        const shortUrl = post.blogUrl.replace(/https?:\/\//, '').substring(0, 20);
+                        blogCounts[shortUrl] = (blogCounts[shortUrl] || 0) + 1;
+                    });
+                    
+                    const summaryText = Object.entries(blogCounts)
+                        .map(([url, count]) => `${url}... (${count}개)`)
+                        .join(', ');
+                    
+                    selectionInfo.innerHTML = `
+                        <strong>✅ 총 4개 포스트 선택 완료!</strong><br>
+                        <span style="font-size: 11px;">블로그별 선택: ${summaryText}</span>
+                    `;
+                    selectionInfo.classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('internal-link-config').classList.add('hidden');
+                document.getElementById('internal-char-count-info').classList.add('hidden');
+                document.getElementById('multi-blog-selection-info').classList.add('hidden');
+            }
+            
+            // 블로그 섹션 하이라이트 업데이트
+            updateBlogSectionHighlights();
+        }
+        
+        // 블로그 섹션 하이라이트 업데이트 함수
+        function updateBlogSectionHighlights() {
+            const blogSections = document.querySelectorAll('.blog-rss-section');
+            blogSections.forEach(section => {
+                const hasSelection = section.querySelector('input[type="checkbox"]:checked');
+                if (hasSelection) {
+                    section.classList.add('has-posts');
+                } else {
+                    section.classList.remove('has-posts');
+                }
+            });
+        }
+        
+        // 선택된 포스트 요약 표시 함수
+        function updateSelectedPostsSummary() {
+            const summaryEl = document.getElementById('selected-posts-summary');
+            if (!summaryEl) return;
+            
+            if (totalSelectedPosts > 0) {
+                const summaryHtml = `
+                    <strong>📋 선택된 포스트 (${totalSelectedPosts}/4):</strong><br>
+                    ${selectedMultiBlogPosts.map((post, idx) => 
+                        `${idx + 1}. ${post.title.substring(0, 30)}...`
+                    ).join('<br>')}
+                `;
+                summaryEl.innerHTML = summaryHtml;
+                summaryEl.classList.remove('hidden');
+            } else {
+                summaryEl.classList.add('hidden');
+            }
+        }
+        
+        // 수정된 카운트 업데이트 함수
+        function updateMultiSelectedPostsCount() {
+            const countElement = document.getElementById('multi-selected-posts-count');
+            if (countElement) {
+                countElement.textContent = `${totalSelectedPosts}/4 선택됨`;
+                countElement.className = totalSelectedPosts === 4 ? 'text-sm text-green-600 font-bold' : 'text-sm text-gray-600';
+            }
+            
+            // 상태 메시지 업데이트
+            const statusEl = document.getElementById('multi-blog-status');
+            if (statusEl) {
+                if (totalSelectedPosts === 0) {
+                    statusEl.innerHTML = '블로그 개수에 상관없이 총 4개의 포스트를 선택해주세요.';
+                    statusEl.classList.remove('hidden');
+                } else if (totalSelectedPosts < 4) {
+                    const remaining = 4 - totalSelectedPosts;
+                    statusEl.innerHTML = `${remaining}개 더 선택해주세요. (현재 ${totalSelectedPosts}/4)`;
+                    statusEl.classList.remove('hidden');
+                } else {
+                    statusEl.classList.add('hidden');
+                }
+            }
+        }
+
+        // 나머지 함수들은 모두 동일하게 유지...
+        // (블로그 URL 복사, 제목 및 버튼 편집, 추가 함수들 등 모두 그대로)
+
         // 블로그 URL 복사 함수
         window.copyBlogUrl = function() {
             const blogUrlText = document.getElementById('blog-url-text');
@@ -1746,7 +2307,7 @@
                 mainTitleInput.addEventListener('input', updateMainTitleCharCount);
             }
             
-            // 버튼 텍스트 입력 시 글자수 업데이트
+           // 버튼 텍스트 입력 시 글자수 업데이트
             for (let i = 1; i <= 4; i++) {
                 const input = document.getElementById(`button-text-${i}`);
                 if (input) {
@@ -2314,7 +2875,7 @@
             }
         }
 
-         // 개선된 버튼 텍스트 생성 함수
+        // 개선된 버튼 텍스트 생성 함수
         async function generateButtonTexts() {
             const previewContainer = document.getElementById('internal-link-preview');
             const previewButtons = document.getElementById('preview-buttons');
@@ -2463,7 +3024,7 @@
             }
         }
 
-        // RSS 내부링크 포스팅 생성 (개선된 버전)
+        // RSS 내부링크 포스팅 생성 (개선된 버전) - 수정된 부분
         async function handleGenerateInternalLink() {
             if (selectedRssPosts.length !== 4) {
                 showStatusMessage('정확히 4개의 글을 선택해주세요.', 'error');
@@ -2640,14 +3201,22 @@ ${WRITING_INSTRUCTIONS || defaultInstructions}
                 
                 // 초기화
                 selectedRssPosts = [];
+                selectedMultiBlogPosts = [];
+                totalSelectedPosts = 0;
                 generatedMainTitle = '';
                 generatedButtonTexts = [];
                 document.getElementById('generated-main-title').value = '';
                 document.getElementById('internal-publish-time-input').value = '';
-                document.getElementById('rss-posts-container').classList.add('hidden');
+                document.getElementById('multi-blog-rss-container').classList.add('hidden');
                 document.getElementById('internal-link-config').classList.add('hidden');
-                document.getElementById('blog-url-input').value = '';
                 document.getElementById('internal-char-count-info').classList.add('hidden');
+                document.getElementById('selected-posts-summary').classList.add('hidden');
+                
+                  // 멀티 블로그 입력 초기화
+                const blogInputs = document.querySelectorAll('.multi-blog-input');
+                blogInputs.forEach(input => {
+                    input.value = '';
+                });
                 
             } catch (error) {
                 console.error('RSS 내부링크 포스팅 생성 실패:', error);
@@ -3053,6 +3622,7 @@ URL: ${item.link}
             const tabs = document.getElementById('tabs');
             const fetchRssButton = document.getElementById('fetch-rss-button');
             const generateInternalLinkButton = document.getElementById('generate-internal-link-button');
+            const fetchMultiRssButton = document.getElementById('fetch-multi-rss-button');
             
             if (saveSettingsButton) saveSettingsButton.addEventListener('click', handleSaveSettings);
             if (googleLoginButton) {
@@ -3096,6 +3666,7 @@ URL: ${item.link}
             if (tabs) tabs.addEventListener('click', handleTabClick);
             if (fetchRssButton) fetchRssButton.addEventListener('click', handleFetchRss);
             if (generateInternalLinkButton) generateInternalLinkButton.addEventListener('click', handleGenerateInternalLink);
+            if (fetchMultiRssButton) fetchMultiRssButton.addEventListener('click', handleFetchMultiRss);
             
             // Google Search 체크박스 이벤트
             const useGoogleSearchSingle = document.getElementById('use-google-search-single');
@@ -4289,7 +4860,7 @@ URL: ${item.link}
             }
             
             showView('posting');
-            handleTabClick({ target: document.querySelector('[data-tab="ai-bulk-schedule-mode"]') });
+            handleTabClick({ target: document.querySelector('[data-tab="internal-link-mode"]') });
             updateSearchQuotaDisplay();
         }
         
@@ -4555,7 +5126,7 @@ URL: ${item.link}
 - 각 주제는 이전 주제와 중복되지 않아야 하며 년도 표기 한다면 2025년 최신 표기
 - 구체적이고 매력적이어야 합니다
 - 객관적이고 사실적인 표현만 사용
-
+- 라벨 150자 제한 , 1개 라벨 8자를 넘지 않는다. , 최적화 단어 6개 라벨 
 **매우 중요: 서론이나 번호 없이, 오직 각 주제를 줄바꿈으로 구분한 목록만 제공해주세요.**`;
                     const topicsText = await geminiFetch('gemini-2.5-flash-preview-05-20', prompt);
                     const topics = topicsText.split('\n').filter(t => {
@@ -4823,7 +5394,7 @@ URL: ${item.link}
                 labels: processedLabels
             };
             
-             if (permalink) {
+            if (permalink) {
                 const formattedPermalink = formatPermalink(permalink);
                 if (formattedPermalink) {
                     postData.url = `${selectedBlogUrl}${formattedPermalink}.html`;
@@ -5197,7 +5768,7 @@ URL: ${item.link}
             }
         }
         
-        // 스마트 대량 예약 로직
+          // 스마트 대량 예약 로직
         async function handleBulkSchedule() {
             const topicIdeasList = document.getElementById('topic-ideas-list');
             const scheduleTimesInput = document.getElementById('schedule-times-input');
