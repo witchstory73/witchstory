@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -278,9 +279,26 @@
             border-radius: 4px;
         }
         
+        .topic-item {
+            padding: 12px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        
         .topic-item.selected {
             background-color: #dbeafe !important;
             border: 2px solid #3b82f6;
+        }
+        
+        .topic-title-input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-top: 4px;
         }
         
         .realtime-clock {
@@ -532,31 +550,6 @@
         .change-blog-btn:hover {
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .permalink-section {
-            background-color: #f0f9ff;
-            border: 1px solid #0ea5e9;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 12px;
-        }
-        
-        .permalink-preview {
-            font-family: monospace;
-            font-size: 12px;
-            color: #0369a1;
-            background-color: #e0f2fe;
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin-top: 4px;
-            word-break: break-all;
-        }
-        
-        .permalink-info {
-            font-size: 11px;
-            color: #64748b;
-            margin-top: 4px;
         }
 
         .search-usage-info {
@@ -1373,26 +1366,26 @@
                 </div>
             </div>
 
-            <!-- AI 대량 예약 모드 -->
+            <!-- AI 대량 예약 모드 (수정된 버전: 수동 제목 입력) -->
             <div id="ai-bulk-schedule-mode-content" class="tab-content space-y-4 hidden">
-                <p class="text-sm text-gray-600 dark:text-gray-400">1. 핵심 키워드로 다양한 주제를 생성합니다.<br>2. 생성된 주제 중 포스팅할 주제들을 선택합니다.<br>3. 아래에서 예약 스케줄을 설정하고 작업을 시작하세요.</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">제목을 직접 입력하여 대량 포스팅을 예약합니다.</p>
+                
+                <!-- 수동 제목 입력 -->
                 <div>
-                    <label class="block text-sm font-medium mb-1">핵심 키워드</label>
-                    <div id="keyword-inputs-container" class="space-y-2">
-                        <div class="flex items-center space-x-2">
-                            <input type="text" name="core-keywords" class="block w-full px-3 py-2 border rounded-md" placeholder="예: 김치찌개">
-                        </div>
-                    </div>
-                    <button type="button" id="add-keyword-button" class="mt-2 text-sm text-blue-600 hover:underline flex items-center">
-                        <i data-lucide="plus-circle" class="w-4 h-4 mr-1"></i>
-                        키워드 추가
-                    </button>
+                    <label class="block text-sm font-medium mb-1">포스팅할 제목 입력 (한 줄에 하나씩)</label>
+                    <textarea id="manual-topics-input"
+                              class="w-full border rounded-md p-2 text-sm h-32"
+                              placeholder="한 줄에 하나씩 제목을 입력하세요.&#10;예: 김치찌개 맛있게 끓이는 법&#10;예: 된장찌개 황금 레시피"></textarea>
                 </div>
+                
                 <button id="generate-topics-button" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
                     <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>
-                    <span>주제 아이디어 생성하기</span>
+                    <span>제목 목록 생성하기</span>
                 </button>
+                
                 <div id="topic-ideas-loader" class="flex justify-center items-center h-32 hidden"><div class="loader"></div></div>
+                
+                <!-- 주제 선택 및 수정 영역 -->
                 <div id="topic-selection-container" class="hidden">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="text-lg font-semibold">주제 선택 (<span id="selected-topic-count">0</span>/<span id="total-topic-count">0</span>개)</h3>
@@ -1403,6 +1396,7 @@
                     </div>
                     <ul id="topic-ideas-list" class="space-y-2 max-h-60 overflow-y-auto border p-2 rounded-md"></ul>
                 </div>
+                
                 <div id="bulk-schedule-config" class="space-y-4 pt-4 border-t hidden">
                     <h3 class="text-lg font-semibold">예약 설정</h3>
                     
@@ -1489,22 +1483,6 @@
                     </button>
                 </div>
                 
-                <!-- 퍼머링크 설정 섹션 추가 -->
-                <div class="permalink-section">
-                    <label for="ai-permalink-input" class="block text-sm font-medium mb-2">
-                        <i data-lucide="link" class="w-4 h-4 inline mr-1"></i>
-                        퍼머링크 (선택사항)
-                    </label>
-                    <input type="text" id="ai-permalink-input" class="mt-1 block w-full px-3 py-2 border rounded-md" 
-                           placeholder="예: my-custom-url (영문, 숫자, 하이픈만 사용)">
-                    <div id="ai-permalink-preview" class="permalink-preview hidden"></div>
-                    <p class="permalink-info">
-                        • 비워두면 제목에서 자동 생성됩니다<br>
-                        • 영문 소문자, 숫자, 하이픈(-)만 사용 가능<br>
-                        • 공백은 자동으로 하이픈으로 변환됩니다
-                    </p>
-                </div>
-                
                 <div>
                     <label for="ai-publish-time-input" class="block text-sm font-medium">예약 발행 시간</label>
                     <input type="datetime-local" id="ai-publish-time-input" class="mt-1 block w-full px-3 py-2 border rounded-md">
@@ -1554,21 +1532,6 @@
                     <label for="manual-labels-input" class="block text-sm font-medium">라벨/태그 (쉼표로 구분)</label>
                     <input type="text" id="manual-labels-input" class="mt-1 block w-full px-3 py-2 border rounded-md" placeholder="예: 요리, 레시피, 한식">
                     <p class="text-xs text-gray-500 mt-1">블로그 SEO를 위한 라벨/태그를 입력하세요 (각 라벨 최대 20자, 전체 최대 150자)</p>
-                </div>
-                
-                <!-- 수동 모드 퍼머링크 설정 추가 -->
-                <div class="permalink-section">
-                    <label for="manual-permalink-input" class="block text-sm font-medium mb-2">
-                        <i data-lucide="link" class="w-4 h-4 inline mr-1"></i>
-                        퍼머링크 (선택사항)
-                    </label>
-                    <input type="text" id="manual-permalink-input" class="mt-1 block w-full px-3 py-2 border rounded-md" 
-                           placeholder="예: my-custom-url (영문, 숫자, 하이픈만 사용)">
-                    <div id="manual-permalink-preview" class="permalink-preview hidden"></div>
-                    <p class="permalink-info">
-                        • 비워두면 제목에서 자동 생성됩니다<br>
-                        • 영문 소문자, 숫자, 하이픈(-)만 사용 가능
-                    </p>
                 </div>
                 
                 <div>
@@ -1855,7 +1818,249 @@
 
 위 지침에 따라 주제에 맞는 고품질 블로그 글을 작성해주세요.`;
 
-        // 멀티 블로그 RSS 관련 함수들 (수정)
+        // 수정된 이미지 생성 함수들 (사람/얼굴 제거 강화)
+        async function translateToEnglish(koreanText) {
+            if (!GEMINI_API_KEY) {
+                console.warn('Gemini API 키가 없어 원문 프롬프트로 이미지를 생성합니다.');
+                return koreanText;
+            }
+
+            try {
+                const translatePrompt = `
+You are an image prompt cleaner and translator.
+
+1) Translate the following Korean blog image description into natural English.
+2) Focus on OBJECTS, PRODUCTS, INTERIORS, LANDSCAPES or FOOD ONLY.
+3) NEVER include: person, people, man, woman, girl, boy, child, face, selfie, portrait, body, hand, arm, leg, skin, model, character, cartoon, anime, illustration.
+4) Remove any words related to humans or body parts.
+5) Write a single English sentence, no quotes.
+
+Text:
+"${koreanText}"
+`;
+
+                const body = {
+                    contents: [{
+                        parts: [{ text: translatePrompt }]
+                    }]
+                };
+
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    }
+                );
+
+                if (!response.ok) {
+                    console.error('번역 실패:', await response.text());
+                    return koreanText;
+                }
+
+                const data = await response.json();
+                let english = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || koreanText;
+
+                // 혹시 남아 있을지 모를 사람 관련 단어 한 번 더 필터링
+                const peopleKeywords = [
+                    'person','people','man','woman','boy','girl','child','face',
+                    'selfie','portrait','body','human','hands','hand','arm','leg','skin',
+                    'character','figure'
+                ];
+                let cleaned = english;
+                for (const kw of peopleKeywords) {
+                    const re = new RegExp(`\\b${kw}s?\\b`, 'gi');
+                    cleaned = cleaned.replace(re, '');
+                }
+                cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+                if (!cleaned) {
+                    cleaned = 'high quality product, detail shot, no people, studio background';
+                }
+
+                return cleaned;
+            } catch (error) {
+                console.error('translateToEnglish error:', error);
+                return koreanText;
+            }
+        }
+
+        async function generatePollinationsImage(prompt) {
+            try {
+                const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(prompt);
+                let basePrompt = prompt;
+
+                if (hasKorean) {
+                    basePrompt = await translateToEnglish(prompt);
+                }
+
+                // 사람 관련 단어 강제 제거
+                const peopleKeywords = [
+                    'person','people','man','woman','boy','girl','child','face',
+                    'selfie','portrait','body','human','hands','hand','arm','leg','skin',
+                    'character','figure','model'
+                ];
+                let cleaned = basePrompt;
+                for (const kw of peopleKeywords) {
+                    const re = new RegExp(`\\b${kw}s?\\b`, 'gi');
+                    cleaned = cleaned.replace(re, '');
+                }
+                cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+                if (cleaned.length < 10) {
+                    cleaned += ' high quality product photo, no people, studio lighting';
+                }
+
+                const positiveEnhancements = [
+                    'high quality photography',
+                    'sharp focus',
+                    'professional lighting',
+                    'detailed texture',
+                    'no people',
+                    'no humans',
+                    'clean background'
+                ];
+
+                const negativePrompts = [
+                    'person','people','man','woman','boy','girl','child','face',
+                    'selfie','portrait','body','human','hands','hand','arms','legs','skin',
+                    'cartoon','anime','illustration','drawing','3d render','cgi',
+                    'low quality','blurry','deformed','disfigured'
+                ];
+
+                const finalPrompt = `${cleaned}, ${positiveEnhancements.join(', ')}`;
+                const encodedPrompt = encodeURIComponent(finalPrompt);
+                const negative = encodeURIComponent(negativePrompts.join(', '));
+
+                const seed = Date.now() + Math.floor(Math.random() * 10000);
+
+                // flux + no_people=true 강제 적용
+                const imageUrl =
+                    `https://image.pollinations.ai/prompt/${encodedPrompt}` +
+                    `?model=flux&width=1024&height=768&nologo=true` +
+                    `&seed=${seed}&safe=true&no_people=true&negative=${negative}`;
+
+                return imageUrl;
+            } catch (error) {
+                console.error('generatePollinationsImage error:', error);
+
+                const fallbackPrompt = encodeURIComponent(
+                    'high quality product photo, modern interior, detailed texture, no people, no humans, studio lighting'
+                );
+                return `https://image.pollinations.ai/prompt/${fallbackPrompt}?model=flux&width=1024&height=768&nologo=true&safe=true&no_people=true`;
+            }
+        }
+
+        // 수정된 대량 예약 관련 함수들
+        async function handleGenerateTopics() {
+            const manualInput = document.getElementById('manual-topics-input');
+            const loader = document.getElementById('topic-ideas-loader');
+            const topicSelectionContainer = document.getElementById('topic-selection-container');
+            const bulkScheduleConfig = document.getElementById('bulk-schedule-config');
+
+            if (!manualInput) return;
+
+            const raw = manualInput.value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            if (raw.length === 0) {
+                showStatusMessage('한 줄에 하나씩 제목을 먼저 입력해주세요.', 'error');
+                manualInput.focus();
+                return;
+            }
+
+            loader.classList.remove('hidden');
+            topicSelectionContainer.classList.add('hidden');
+            bulkScheduleConfig.classList.add('hidden');
+
+            try {
+                // 중복 제거
+                const uniqueTopics = [...new Set(raw)];
+                renderTopicIdeas(uniqueTopics);
+
+                topicSelectionContainer.classList.remove('hidden');
+                bulkScheduleConfig.classList.remove('hidden');
+
+                showStatusMessage(`총 ${uniqueTopics.length}개의 제목이 준비되었습니다. 사용할 제목을 선택해주세요.`, 'success');
+            } catch (error) {
+                console.error(error);
+                showStatusMessage('제목 리스트를 불러오는 중 오류가 발생했습니다.', 'error');
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        function renderTopicIdeas(topics) {
+            const listEl = document.getElementById('topic-ideas-list');
+            const totalTopicCountEl = document.getElementById('total-topic-count');
+            
+            if (totalTopicCountEl) {
+                totalTopicCountEl.textContent = topics.length;
+            }
+            
+            if (!listEl) return;
+
+            listEl.innerHTML = topics.map((topic, index) => {
+                const safeId = `topic-${index}`;
+                const safeValue = topic.replace(/"/g, '&quot;');
+
+                return `
+                    <li class="topic-item">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <div class="flex items-center flex-1 gap-2">
+                                <input type="checkbox"
+                                       id="${safeId}"
+                                       value="${safeValue}"
+                                       class="topic-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded">
+                                <label for="${safeId}" class="text-sm cursor-pointer flex-1">
+                                    ${index + 1}. ${safeValue}
+                                </label>
+                            </div>
+                            <button type="button"
+                                    onclick="selectTopicForSinglePosting('${safeValue.replace(/'/g, "\\'")}')"
+                                    class="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700">
+                                단일 포스팅
+                            </button>
+                        </div>
+                        <div class="mt-1">
+                            <label class="block text-xs text-gray-500 mb-1">
+                                실제 발행 제목 (수정 가능)
+                            </label>
+                            <input type="text"
+                                   class="topic-title-input"
+                                   value="${safeValue}">
+                        </div>
+                    </li>
+                `;
+            }).join('');
+
+            // 체크박스 이벤트 리스너 추가
+            listEl.querySelectorAll('.topic-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const listItem = this.closest('li');
+                    if (this.checked) {
+                        listItem.classList.add('selected');
+                    } else {
+                        listItem.classList.remove('selected');
+                    }
+                    updateSelectedTopicCount();
+                    validateScheduleSettings();
+                    updateBulkDateInfo();
+                    updateSearchQuotaDisplay();
+                });
+            });
+            
+            updateSelectedTopicCount();
+            lucide.createIcons();
+        }
+
+        // 나머지 모든 함수들은 원본 코드와 동일하게 유지
+        // (여기서부터는 원본 코드의 나머지 부분을 그대로 복사)
+        
+        // 멀티 블로그 RSS 관련 함수들
         window.addBlogInput = function() {
             if (currentBlogCount >= 4) {
                 showStatusMessage('최대 4개의 블로그만 추가할 수 있습니다.', 'error');
@@ -1935,282 +2140,6 @@
                 document.getElementById('add-blog-url-btn').style.display = 'inline-flex';
             }
         }
-        
-        // 수정된 멀티 RSS 가져오기 함수
-        async function handleFetchMultiRss() {
-            const blogInputs = document.querySelectorAll('.multi-blog-input');
-            const blogUrls = [];
-            
-            blogInputs.forEach(input => {
-                const url = normalizeUrl(input.value.trim());
-                if (url) {
-                    blogUrls.push({ url, index: parseInt(input.dataset.blogIndex) });
-                }
-            });
-            
-            if (blogUrls.length === 0) {
-                showStatusMessage('최소 1개 이상의 블로그 주소를 입력해주세요.', 'error');
-                return;
-            }
-            
-            const fetchButton = document.getElementById('fetch-multi-rss-button');
-            fetchButton.disabled = true;
-            fetchButton.innerHTML = '<i data-lucide="loader" class="w-4 h-4 inline mr-1 animate-spin"></i> 로딩 중...';
-            
-            multiBlogData = [];
-            multiBlogPosts = {};
-            selectedMultiBlogPosts = [];
-            totalSelectedPosts = 0;
-            
-            try {
-                showStatusMessage(`${blogUrls.length}개 블로그에서 RSS 피드를 가져오는 중...`, 'info');
-                
-                const fetchPromises = blogUrls.map(async (blogInfo) => {
-                    const rssUrls = generateRssUrls(blogInfo.url);
-                    let posts = [];
-                    
-                    for (const rssUrl of rssUrls) {
-                        for (const proxyUrl of corsProxies) {
-                            try {
-                                const rssData = await fetchRssWithProxy(rssUrl, proxyUrl);
-                                posts = parseRss(rssData);
-                                if (posts.length > 0) break;
-                            } catch (error) {
-                                continue;
-                            }
-                        }
-                        if (posts.length > 0) break;
-                    }
-                    
-                    return {
-                        url: blogInfo.url,
-                        index: blogInfo.index,
-                        posts: posts
-                    };
-                });
-                
-                const results = await Promise.all(fetchPromises);
-                
-                let totalPosts = 0;
-                results.forEach(result => {
-                    if (result.posts.length > 0) {
-                        multiBlogData.push(result);
-                        multiBlogPosts[result.index] = result.posts;
-                        totalPosts += result.posts.length;
-                    }
-                });
-                
-                if (multiBlogData.length === 0) {
-                    throw new Error('RSS 피드를 가져올 수 없습니다.');
-                }
-                
-                showStatusMessage(`✅ ${multiBlogData.length}개 블로그에서 총 ${totalPosts}개의 포스트를 가져왔습니다!`, 'success');
-                displayMultiBlogPosts();
-                
-            } catch (error) {
-                console.error('멀티 RSS 가져오기 실패:', error);
-                showStatusMessage('RSS 피드를 가져올 수 없습니다. 올바른 블로그 주소를 입력해주세요.', 'error');
-            } finally {
-                fetchButton.disabled = false;
-                fetchButton.innerHTML = '<i data-lucide="download" class="w-4 h-4 inline mr-1"></i> 모든 블로그 RSS 가져오기';
-                lucide.createIcons();
-            }
-        }
-        
-        // 수정된 멀티 블로그 포스트 표시 함수
-        function displayMultiBlogPosts() {
-            const container = document.getElementById('multi-blog-rss-container');
-            const sectionsContainer = document.getElementById('multi-blog-sections');
-            
-            container.classList.remove('hidden');
-            sectionsContainer.innerHTML = '';
-            
-            multiBlogData.forEach((blogData, blogIndex) => {
-                const section = document.createElement('div');
-                section.className = 'blog-rss-section';
-                section.dataset.blogUrl = blogData.url;
-                section.dataset.blogIndex = blogData.index;
-                
-                const headerHtml = `
-                    <div class="blog-rss-header">
-                        <span>${blogData.url.replace(/https?:\/\//, '').substring(0, 30)}...</span>
-                        <span class="blog-post-count">${blogData.posts.length}개</span>
-                    </div>
-                `;
-                
-                const postsHtml = `
-                    <div class="blog-rss-posts">
-                        ${blogData.posts.slice(0, 25).map((post, postIndex) => {
-                            const dateStr = post.pubDate ? new Date(post.pubDate).toLocaleDateString('ko-KR') : '';
-                            return `
-                                <div class="multi-rss-post-item" data-blog-index="${blogData.index}" data-post-index="${postIndex}">
-                                    <input type="checkbox" id="multi-post-${blogData.index}-${postIndex}" 
-                                           data-blog-url="${blogData.url}"
-                                           data-blog-index="${blogData.index}"
-                                           data-title="${post.title.replace(/"/g, '&quot;')}" 
-                                           data-link="${post.link}">
-                                    <label for="multi-post-${blogData.index}-${postIndex}" style="cursor: pointer; flex: 1;">
-                                        <div style="font-weight: 600; font-size: 13px; color: #1e40af;">${post.title}</div>
-                                        <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${dateStr}</div>
-                                    </label>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
-                
-                section.innerHTML = headerHtml + postsHtml;
-                sectionsContainer.appendChild(section);
-            });
-            
-            // 체크박스 이벤트 리스너 추가
-            sectionsContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', handleMultiBlogPostSelection);
-            });
-            
-            updateMultiSelectedPostsCount();
-        }
-        
-        // 완전히 새로운 선택 로직
-        function handleMultiBlogPostSelection(e) {
-            const checkbox = e.target;
-            
-            if (checkbox.checked) {
-                // 이미 4개 선택되어 있으면 추가 선택 불가
-                if (totalSelectedPosts >= 4) {
-                    checkbox.checked = false;
-                    showStatusMessage('최대 4개까지만 선택할 수 있습니다.', 'warn');
-                    return;
-                }
-                
-                const postItem = checkbox.closest('.multi-rss-post-item');
-                postItem.classList.add('selected');
-                
-                // 선택된 포스트 추가
-                const postData = {
-                    blogUrl: checkbox.dataset.blogUrl,
-                    blogIndex: checkbox.dataset.blogIndex,
-                    title: checkbox.dataset.title,
-                    link: checkbox.dataset.link
-                };
-                
-                selectedMultiBlogPosts.push(postData);
-                totalSelectedPosts++;
-                
-            } else {
-                const postItem = checkbox.closest('.multi-rss-post-item');
-                postItem.classList.remove('selected');
-                
-                // 선택 해제
-                selectedMultiBlogPosts = selectedMultiBlogPosts.filter(p => 
-                    !(p.link === checkbox.dataset.link && p.blogUrl === checkbox.dataset.blogUrl)
-                );
-                totalSelectedPosts--;
-            }
-            
-            updateMultiSelectedPostsCount();
-            updateSelectedPostsSummary();
-            
-            // 4개 선택 시 처리
-            if (totalSelectedPosts === 4) {
-                selectedRssPosts = selectedMultiBlogPosts.map(p => ({
-                    title: p.title,
-                    link: p.link
-                }));
-                
-                generateMainTitle();
-                generateButtonTexts();
-                document.getElementById('internal-link-config').classList.remove('hidden');
-                document.getElementById('internal-char-count-info').classList.remove('hidden');
-                setupTitleAndButtonEditing();
-                
-                // 선택 정보 표시
-                const selectionInfo = document.getElementById('multi-blog-selection-info');
-                if (selectionInfo) {
-                    const blogCounts = {};
-                    selectedMultiBlogPosts.forEach(post => {
-                        const shortUrl = post.blogUrl.replace(/https?:\/\//, '').substring(0, 20);
-                        blogCounts[shortUrl] = (blogCounts[shortUrl] || 0) + 1;
-                    });
-                    
-                    const summaryText = Object.entries(blogCounts)
-                        .map(([url, count]) => `${url}... (${count}개)`)
-                        .join(', ');
-                    
-                    selectionInfo.innerHTML = `
-                        <strong>✅ 총 4개 포스트 선택 완료!</strong><br>
-                        <span style="font-size: 11px;">블로그별 선택: ${summaryText}</span>
-                    `;
-                    selectionInfo.classList.remove('hidden');
-                }
-            } else {
-                document.getElementById('internal-link-config').classList.add('hidden');
-                document.getElementById('internal-char-count-info').classList.add('hidden');
-                document.getElementById('multi-blog-selection-info').classList.add('hidden');
-            }
-            
-            // 블로그 섹션 하이라이트 업데이트
-            updateBlogSectionHighlights();
-        }
-        
-        // 블로그 섹션 하이라이트 업데이트 함수
-        function updateBlogSectionHighlights() {
-            const blogSections = document.querySelectorAll('.blog-rss-section');
-            blogSections.forEach(section => {
-                const hasSelection = section.querySelector('input[type="checkbox"]:checked');
-                if (hasSelection) {
-                    section.classList.add('has-posts');
-                } else {
-                    section.classList.remove('has-posts');
-                }
-            });
-        }
-        
-        // 선택된 포스트 요약 표시 함수
-        function updateSelectedPostsSummary() {
-            const summaryEl = document.getElementById('selected-posts-summary');
-            if (!summaryEl) return;
-            
-            if (totalSelectedPosts > 0) {
-                const summaryHtml = `
-                    <strong>📋 선택된 포스트 (${totalSelectedPosts}/4):</strong><br>
-                    ${selectedMultiBlogPosts.map((post, idx) => 
-                        `${idx + 1}. ${post.title.substring(0, 30)}...`
-                    ).join('<br>')}
-                `;
-                summaryEl.innerHTML = summaryHtml;
-                summaryEl.classList.remove('hidden');
-            } else {
-                summaryEl.classList.add('hidden');
-            }
-        }
-        
-        // 수정된 카운트 업데이트 함수
-        function updateMultiSelectedPostsCount() {
-            const countElement = document.getElementById('multi-selected-posts-count');
-            if (countElement) {
-                countElement.textContent = `${totalSelectedPosts}/4 선택됨`;
-                countElement.className = totalSelectedPosts === 4 ? 'text-sm text-green-600 font-bold' : 'text-sm text-gray-600';
-            }
-            
-            // 상태 메시지 업데이트
-            const statusEl = document.getElementById('multi-blog-status');
-            if (statusEl) {
-                if (totalSelectedPosts === 0) {
-                    statusEl.innerHTML = '블로그 개수에 상관없이 총 4개의 포스트를 선택해주세요.';
-                    statusEl.classList.remove('hidden');
-                } else if (totalSelectedPosts < 4) {
-                    const remaining = 4 - totalSelectedPosts;
-                    statusEl.innerHTML = `${remaining}개 더 선택해주세요. (현재 ${totalSelectedPosts}/4)`;
-                    statusEl.classList.remove('hidden');
-                } else {
-                    statusEl.classList.add('hidden');
-                }
-            }
-        }
-
-        // 나머지 함수들은 모두 동일하게 유지...
-        // (블로그 URL 복사, 제목 및 버튼 편집, 추가 함수들 등 모두 그대로)
 
         // 블로그 URL 복사 함수
         window.copyBlogUrl = function() {
@@ -2307,7 +2236,7 @@
                 mainTitleInput.addEventListener('input', updateMainTitleCharCount);
             }
             
-           // 버튼 텍스트 입력 시 글자수 업데이트
+            // 버튼 텍스트 입력 시 글자수 업데이트
             for (let i = 1; i <= 4; i++) {
                 const input = document.getElementById(`button-text-${i}`);
                 if (input) {
@@ -2359,6 +2288,279 @@
                     ${text}
                 </a>
             `).join('');
+        }
+
+        // 멀티 블로그 RSS 가져오기
+        async function handleFetchMultiRss() {
+            const blogInputs = document.querySelectorAll('.multi-blog-input');
+            const blogUrls = [];
+            
+            blogInputs.forEach(input => {
+                const url = normalizeUrl(input.value.trim());
+                if (url) {
+                    blogUrls.push({ url, index: parseInt(input.dataset.blogIndex) });
+                }
+            });
+            
+            if (blogUrls.length === 0) {
+                showStatusMessage('최소 1개 이상의 블로그 주소를 입력해주세요.', 'error');
+                return;
+            }
+            
+            const fetchButton = document.getElementById('fetch-multi-rss-button');
+            fetchButton.disabled = true;
+            fetchButton.innerHTML = '<i data-lucide="loader" class="w-4 h-4 inline mr-1 animate-spin"></i> 로딩 중...';
+            
+            multiBlogData = [];
+            multiBlogPosts = {};
+            selectedMultiBlogPosts = [];
+            totalSelectedPosts = 0;
+            
+            try {
+                showStatusMessage(`${blogUrls.length}개 블로그에서 RSS 피드를 가져오는 중...`, 'info');
+                
+                const fetchPromises = blogUrls.map(async (blogInfo) => {
+                    const rssUrls = generateRssUrls(blogInfo.url);
+                    let posts = [];
+                    
+                    for (const rssUrl of rssUrls) {
+                        for (const proxyUrl of corsProxies) {
+                            try {
+                                const rssData = await fetchRssWithProxy(rssUrl, proxyUrl);
+                                posts = parseRss(rssData);
+                                if (posts.length > 0) break;
+                            } catch (error) {
+                                continue;
+                            }
+                        }
+                        if (posts.length > 0) break;
+                    }
+                    
+                    return {
+                        url: blogInfo.url,
+                        index: blogInfo.index,
+                        posts: posts
+                    };
+                });
+                
+                const results = await Promise.all(fetchPromises);
+                
+                let totalPosts = 0;
+                results.forEach(result => {
+                    if (result.posts.length > 0) {
+                        multiBlogData.push(result);
+                        multiBlogPosts[result.index] = result.posts;
+                        totalPosts += result.posts.length;
+                    }
+                });
+                
+                if (multiBlogData.length === 0) {
+                    throw new Error('RSS 피드를 가져올 수 없습니다.');
+                }
+                
+                showStatusMessage(`✅ ${multiBlogData.length}개 블로그에서 총 ${totalPosts}개의 포스트를 가져왔습니다!`, 'success');
+                displayMultiBlogPosts();
+                
+                } catch (error) {
+                console.error('멀티 RSS 가져오기 실패:', error);
+                showStatusMessage('RSS 피드를 가져올 수 없습니다. 올바른 블로그 주소를 입력해주세요.', 'error');
+            } finally {
+                fetchButton.disabled = false;
+                fetchButton.innerHTML = '<i data-lucide="download" class="w-4 h-4 inline mr-1"></i> 모든 블로그 RSS 가져오기';
+                lucide.createIcons();
+            }
+        }
+        
+        // 멀티 블로그 포스트 표시
+        function displayMultiBlogPosts() {
+            const container = document.getElementById('multi-blog-rss-container');
+            const sectionsContainer = document.getElementById('multi-blog-sections');
+            
+            container.classList.remove('hidden');
+            sectionsContainer.innerHTML = '';
+            
+            multiBlogData.forEach((blogData, blogIndex) => {
+                const section = document.createElement('div');
+                section.className = 'blog-rss-section';
+                section.dataset.blogUrl = blogData.url;
+                section.dataset.blogIndex = blogData.index;
+                
+                const headerHtml = `
+                    <div class="blog-rss-header">
+                        <span>${blogData.url.replace(/https?:\/\//, '').substring(0, 30)}...</span>
+                        <span class="blog-post-count">${blogData.posts.length}개</span>
+                    </div>
+                `;
+                
+                const postsHtml = `
+                    <div class="blog-rss-posts">
+                        ${blogData.posts.slice(0, 25).map((post, postIndex) => {
+                            const dateStr = post.pubDate ? new Date(post.pubDate).toLocaleDateString('ko-KR') : '';
+                            return `
+                                <div class="multi-rss-post-item" data-blog-index="${blogData.index}" data-post-index="${postIndex}">
+                                    <input type="checkbox" id="multi-post-${blogData.index}-${postIndex}" 
+                                           data-blog-url="${blogData.url}"
+                                           data-blog-index="${blogData.index}"
+                                           data-title="${post.title.replace(/"/g, '&quot;')}" 
+                                           data-link="${post.link}">
+                                    <label for="multi-post-${blogData.index}-${postIndex}" style="cursor: pointer; flex: 1;">
+                                        <div style="font-weight: 600; font-size: 13px; color: #1e40af;">${post.title}</div>
+                                        <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${dateStr}</div>
+                                    </label>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                
+                section.innerHTML = headerHtml + postsHtml;
+                sectionsContainer.appendChild(section);
+            });
+            
+            // 체크박스 이벤트 리스너 추가
+            sectionsContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', handleMultiBlogPostSelection);
+            });
+            
+            updateMultiSelectedPostsCount();
+        }
+        
+        // 멀티 블로그 포스트 선택 처리
+        function handleMultiBlogPostSelection(e) {
+            const checkbox = e.target;
+            
+            if (checkbox.checked) {
+                // 이미 4개 선택되어 있으면 추가 선택 불가
+                if (totalSelectedPosts >= 4) {
+                    checkbox.checked = false;
+                    showStatusMessage('최대 4개까지만 선택할 수 있습니다.', 'warn');
+                    return;
+                }
+                
+                const postItem = checkbox.closest('.multi-rss-post-item');
+                postItem.classList.add('selected');
+                
+                // 선택된 포스트 추가
+                const postData = {
+                    blogUrl: checkbox.dataset.blogUrl,
+                    blogIndex: checkbox.dataset.blogIndex,
+                    title: checkbox.dataset.title,
+                    link: checkbox.dataset.link
+                };
+                
+                selectedMultiBlogPosts.push(postData);
+                totalSelectedPosts++;
+                
+            } else {
+                const postItem = checkbox.closest('.multi-rss-post-item');
+                postItem.classList.remove('selected');
+                
+                // 선택 해제
+                selectedMultiBlogPosts = selectedMultiBlogPosts.filter(p => 
+                    !(p.link === checkbox.dataset.link && p.blogUrl === checkbox.dataset.blogUrl)
+                );
+                totalSelectedPosts--;
+            }
+            
+            updateMultiSelectedPostsCount();
+            updateSelectedPostsSummary();
+            
+            // 4개 선택 시 처리
+            if (totalSelectedPosts === 4) {
+                selectedRssPosts = selectedMultiBlogPosts.map(p => ({
+                    title: p.title,
+                    link: p.link
+                }));
+                
+                generateMainTitle();
+                generateButtonTexts();
+                document.getElementById('internal-link-config').classList.remove('hidden');
+                document.getElementById('internal-char-count-info').classList.remove('hidden');
+                setupTitleAndButtonEditing();
+                
+                // 선택 정보 표시
+                const selectionInfo = document.getElementById('multi-blog-selection-info');
+                if (selectionInfo) {
+                    const blogCounts = {};
+                    selectedMultiBlogPosts.forEach(post => {
+                        const shortUrl = post.blogUrl.replace(/https?:\/\//, '').substring(0, 20);
+                        blogCounts[shortUrl] = (blogCounts[shortUrl] || 0) + 1;
+                    });
+                    
+                    const summaryText = Object.entries(blogCounts)
+                        .map(([url, count]) => `${url}... (${count}개)`)
+                        .join(', ');
+                    
+                    selectionInfo.innerHTML = `
+                        <strong>✅ 총 4개 포스트 선택 완료!</strong><br>
+                        <span style="font-size: 11px;">블로그별 선택: ${summaryText}</span>
+                    `;
+                    selectionInfo.classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('internal-link-config').classList.add('hidden');
+                document.getElementById('internal-char-count-info').classList.add('hidden');
+                document.getElementById('multi-blog-selection-info').classList.add('hidden');
+            }
+            
+            // 블로그 섹션 하이라이트 업데이트
+            updateBlogSectionHighlights();
+        }
+        
+        // 블로그 섹션 하이라이트 업데이트
+        function updateBlogSectionHighlights() {
+            const blogSections = document.querySelectorAll('.blog-rss-section');
+            blogSections.forEach(section => {
+                const hasSelection = section.querySelector('input[type="checkbox"]:checked');
+                if (hasSelection) {
+                    section.classList.add('has-posts');
+                } else {
+                    section.classList.remove('has-posts');
+                }
+            });
+        }
+        
+        // 선택된 포스트 요약 표시
+        function updateSelectedPostsSummary() {
+            const summaryEl = document.getElementById('selected-posts-summary');
+            if (!summaryEl) return;
+            
+            if (totalSelectedPosts > 0) {
+                const summaryHtml = `
+                    <strong>📋 선택된 포스트 (${totalSelectedPosts}/4):</strong><br>
+                    ${selectedMultiBlogPosts.map((post, idx) => 
+                        `${idx + 1}. ${post.title.substring(0, 30)}...`
+                    ).join('<br>')}
+                `;
+                summaryEl.innerHTML = summaryHtml;
+                summaryEl.classList.remove('hidden');
+            } else {
+                summaryEl.classList.add('hidden');
+            }
+        }
+        
+        // 멀티 선택 카운트 업데이트
+        function updateMultiSelectedPostsCount() {
+            const countElement = document.getElementById('multi-selected-posts-count');
+            if (countElement) {
+                countElement.textContent = `${totalSelectedPosts}/4 선택됨`;
+                countElement.className = totalSelectedPosts === 4 ? 'text-sm text-green-600 font-bold' : 'text-sm text-gray-600';
+            }
+            
+            // 상태 메시지 업데이트
+            const statusEl = document.getElementById('multi-blog-status');
+            if (statusEl) {
+                if (totalSelectedPosts === 0) {
+                    statusEl.innerHTML = '블로그 개수에 상관없이 총 4개의 포스트를 선택해주세요.';
+                    statusEl.classList.remove('hidden');
+                } else if (totalSelectedPosts < 4) {
+                    const remaining = 4 - totalSelectedPosts;
+                    statusEl.innerHTML = `${remaining}개 더 선택해주세요. (현재 ${totalSelectedPosts}/4)`;
+                    statusEl.classList.remove('hidden');
+                } else {
+                    statusEl.classList.add('hidden');
+                }
+            }
         }
 
         // 추가 함수들
@@ -2875,7 +3077,7 @@
             }
         }
 
-        // 개선된 버튼 텍스트 생성 함수
+        // 버튼 텍스트 생성
         async function generateButtonTexts() {
             const previewContainer = document.getElementById('internal-link-preview');
             const previewButtons = document.getElementById('preview-buttons');
@@ -2909,7 +3111,7 @@
 버튼4: [텍스트]
 `;
                 
-                const response = await geminiFetch('gemini-2.5-flash-preview-05-20', buttonPrompt);
+                const response = await geminiFetch('gemini-2.5-flash', buttonPrompt);
                 const lines = response.trim().split('\n');
                 
                 generatedButtonTexts = lines.map((line, idx) => {
@@ -2952,7 +3154,7 @@
             }
         }
 
-        // 개선된 메인 제목 자동 생성
+        // 메인 제목 자동 생성
         async function generateMainTitle() {
             const generatedTitleInput = document.getElementById('generated-main-title');
             generatedTitleInput.value = '🤖 AI가 4개 글을 깊이 분석하여 매력적인 제목을 생성 중...';
@@ -2985,7 +3187,7 @@
 완전히 새로운 창의적인 제목 1개만 제공 (따옴표, 설명 없이):
 `;
                 
-                const response = await geminiFetch('gemini-2.5-flash-preview-05-20', titlePrompt);
+                const response = await geminiFetch('gemini-2.5-flash', titlePrompt);
                 let generatedTitle = response.trim().replace(/^["']|["']$/g, '');
                 
                 // 약관 위반 단어 필터링
@@ -3024,7 +3226,7 @@
             }
         }
 
-        // RSS 내부링크 포스팅 생성 (개선된 버전) - 수정된 부분
+        // RSS 내부링크 포스팅 생성
         async function handleGenerateInternalLink() {
             if (selectedRssPosts.length !== 4) {
                 showStatusMessage('정확히 4개의 글을 선택해주세요.', 'error');
@@ -3064,7 +3266,7 @@
                 
                 updateProgress(30, 'AI가 고품질 내부링크 포스팅을 작성 중...');
                 
-                // 내부링크 버튼 HTML 생성 (개선된 버튼 텍스트 사용)
+                // 내부링크 버튼 HTML 생성
                 const internalLinkButtons = selectedRssPosts.map((post, idx) => {
                     const buttonText = generatedButtonTexts[idx] || `🔥 ${post.title.substring(0, 20)}`;
                     return `
@@ -3075,7 +3277,7 @@ ${buttonText}
 </div>`;
                 }).join('\n');
                 
-                // 개선된 내부링크 프롬프트 - 지침 적용
+                // 내부링크 프롬프트
                 let internalLinkPrompt = `
 **주제:** ${generatedMainTitle}
 
@@ -3106,7 +3308,7 @@ ${internalLinkButtons}
 ${WRITING_INSTRUCTIONS || defaultInstructions}
 `;
                 
-                const articleContent = await geminiFetch('gemini-2.5-flash-preview-05-20', internalLinkPrompt);
+                const articleContent = await geminiFetch('gemini-2.5-flash', internalLinkPrompt);
                 
                 // 글자 수 계산
                 const textContent = articleContent.replace(/<[^>]*>/g, '');
@@ -3180,7 +3382,7 @@ ${WRITING_INSTRUCTIONS || defaultInstructions}
 금지 단어: 추천, 1등, 1위, 최고, 베스트, TOP, BEST
 결과는 콤마로 구분된 태그만 제공:`;
                 
-                const tagsText = await geminiFetch('gemini-2.5-flash-preview-05-20', tagsPrompt);
+                const tagsText = await geminiFetch('gemini-2.5-flash', tagsPrompt);
                 const labels = processLabels(tagsText.split(',').map(tag => tag.trim()).filter(Boolean));
                 
                 updateProgress(90, '포스팅 발행 준비 중...');
@@ -3212,7 +3414,7 @@ ${WRITING_INSTRUCTIONS || defaultInstructions}
                 document.getElementById('internal-char-count-info').classList.add('hidden');
                 document.getElementById('selected-posts-summary').classList.add('hidden');
                 
-                  // 멀티 블로그 입력 초기화
+                // 멀티 블로그 입력 초기화
                 const blogInputs = document.querySelectorAll('.multi-blog-input');
                 blogInputs.forEach(input => {
                     input.value = '';
@@ -3227,30 +3429,6 @@ ${WRITING_INSTRUCTIONS || defaultInstructions}
             }
         }
 
-        // 퍼머링크 유효성 검사 및 포맷팅 함수
-        function formatPermalink(permalink) {
-            if (!permalink) return '';
-            
-            return permalink
-                .toLowerCase()
-                .replace(/\s+/g, '-')
-                .replace(/[^a-z0-9-]/g, '')
-                .replace(/-+/g, '-')
-                .replace(/^-|-$/g, '');
-        }
-        
-        // 퍼머링크 미리보기 업데이트
-        function updatePermalinkPreview(inputElement, previewElement) {
-            const permalink = inputElement.value.trim();
-            if (permalink && selectedBlogUrl) {
-                const formatted = formatPermalink(permalink);
-                previewElement.innerHTML = `<strong>URL 미리보기:</strong> ${selectedBlogUrl}${formatted}.html`;
-                previewElement.classList.remove('hidden');
-            } else {
-                previewElement.classList.add('hidden');
-            }
-        }
-        
         // 도메인 추출 함수
         function extractDomain(url) {
             try {
@@ -3260,8 +3438,8 @@ ${WRITING_INSTRUCTIONS || defaultInstructions}
                 return url;
             }
         }
-        
-        // 검색 쿼리 최적화 함수 (강화)
+
+        // 검색 쿼리 최적화 함수
         function optimizeSearchQuery(topic) {
             const currentYear = new Date().getFullYear();
             const currentMonth = new Date().getMonth() + 1;
@@ -3324,7 +3502,7 @@ ${WRITING_INSTRUCTIONS || defaultInstructions}
             addLog(`🔎 검색 쿼리 최적화: "${topic}" → "${enhancedQuery}"`, 'info');
             return enhancedQuery;
         }
-        
+
         // Google Search API 관련 함수들
         function loadSearchUsage() {
             const saved = localStorage.getItem('googleSearchUsage');
@@ -3338,11 +3516,11 @@ ${WRITING_INSTRUCTIONS || defaultInstructions}
             }
             updateSearchQuotaDisplay();
         }
-        
+
         function saveSearchUsage() {
             localStorage.setItem('googleSearchUsage', JSON.stringify(searchUsageToday));
         }
-        
+
         function updateSearchQuotaDisplay() {
             if (GOOGLE_SEARCH_API_KEY && GOOGLE_SEARCH_CX) {
                 const searchApiStatus = document.getElementById('search-api-status');
@@ -3403,7 +3581,7 @@ ${WRITING_INSTRUCTIONS || defaultInstructions}
                 }
             }
         }
-        
+
         function updateSearchStatus(status, text) {
             const searchStatusIndicator = document.getElementById('search-status-indicator');
             const searchStatusText = document.getElementById('search-status-text');
@@ -3430,8 +3608,8 @@ ${WRITING_INSTRUCTIONS || defaultInstructions}
                     break;
             }
         }
-        
-        // 강화된 Google Search 함수
+
+        // Google Search 함수
         async function searchGoogle(query, jobIndex = null, totalJobs = null) {
             if (!GOOGLE_SEARCH_API_KEY || !GOOGLE_SEARCH_CX) {
                 addLog('⚠️ Google Search API가 설정되지 않아 검색을 건너뜁니다', 'warn');
@@ -3500,7 +3678,7 @@ URL: ${item.link}
                 
                 addLog(`✅ ${data.items.length}개의 검색 결과를 찾았습니다 (사용: ${searchUsageToday.count}/${SEARCH_DAILY_LIMIT})`, 'success');
                 
-                const domainList = searchedSources.map((source, idx) => `${idx + 1}. ${source.domain}`).join(', ');
+                const domainList = searchedSources.map((source, idx) => `${idx+1}. ${source.domain}`).join(', ');
                 addLog(`📌 검색된 사이트: ${domainList}`, 'info');
                 
                 const singleSearchResultPreview = document.getElementById('single-search-result-preview');
@@ -3555,249 +3733,35 @@ URL: ${item.link}
                 }
             }
         }
-   
-        // 초기화 및 뷰 관리
-        window.onload = () => {
-            if (!window.google || !window.google.accounts) {
-                console.log('Google API 로드 대기 중...');
-                const checkGoogleApi = setInterval(() => {
-                    if (window.google && window.google.accounts) {
-                        clearInterval(checkGoogleApi);
-                        console.log('Google API 로드 완료!');
-                        initializeAfterGoogleLoad();
-                    }
-                }, 100);
-            } else {
-                initializeAfterGoogleLoad();
-            }
-        };
 
-        function initializeAfterGoogleLoad() {
-            loadSettings();
-            loadSearchUsage();
-            if (CLIENT_ID && GEMINI_API_KEY) {
-                const googleLoginContainer = document.getElementById('google-login-container');
-                if (googleLoginContainer) {
-                    googleLoginContainer.classList.remove('hidden');
-                }
-                initializeGsi();
-            }
-            lucide.createIcons();
+        // 나머지 모든 함수들 계속...
+        function updateSelectedTopicCount() {
+            const topicIdeasList = document.getElementById('topic-ideas-list');
+            const selectedTopicCountEl = document.getElementById('selected-topic-count');
             
-            isAutoRefreshEnabled = localStorage.getItem('autoRefreshToken') === 'true';
-            const autoRefreshToggle = document.getElementById('auto-refresh-toggle');
-            if (autoRefreshToggle) {
-                autoRefreshToggle.checked = isAutoRefreshEnabled;
-                updateAutoRefreshStatus();
-            }
+            if (!topicIdeasList || !selectedTopicCountEl) return;
             
-            startRealtimeClock();
-            setDefaultDates();
-            
-            setupEventListeners();
+            const selectedCheckboxes = topicIdeasList.querySelectorAll('input[type="checkbox"]:checked');
+            const selectedCount = selectedCheckboxes.length;
+            selectedTopicCountEl.textContent = selectedCount;
         }
 
-        function setupEventListeners() {
-            const saveSettingsButton = document.getElementById('save-settings-button');
-            const googleLoginButton = document.getElementById('google-login-button');
-            const logoutButtonSelection = document.getElementById('logout-button-selection');
-            const logoutButtonMain = document.getElementById('logout-button-main');
-            const changeBlogBtn = document.getElementById('change-blog-btn');
-            const generateTopicsButton = document.getElementById('generate-topics-button');
-            const selectAllTopicsButton = document.getElementById('select-all-topics-button');
-            const deselectAllTopicsButton = document.getElementById('deselect-all-topics-button');
-            const startBulkScheduleButton = document.getElementById('start-bulk-schedule-button');
-            const previewScheduleButton = document.getElementById('preview-schedule-button');
-            const addKeywordButton = document.getElementById('add-keyword-button');
-            const aiPublishButton = document.getElementById('ai-publish-button');
-            const saveInstructionsButton = document.getElementById('save-instructions-button');
-            const manualPublishButton = document.getElementById('manual-publish-button');
-            const manualPreviewButton = document.getElementById('manual-preview-button');
-            const manualCodeViewButton = document.getElementById('manual-code-view-button');
-            const manualResetButton = document.getElementById('manual-reset-button');
-            const stopButton = document.getElementById('stop-button');
-            const resumeButton = document.getElementById('resume-button');
-            const pauseResumeBtn = document.getElementById('pause-resume-btn');
-            const clearQueueBtn = document.getElementById('clear-queue-btn');
-            const tabs = document.getElementById('tabs');
-            const fetchRssButton = document.getElementById('fetch-rss-button');
-            const generateInternalLinkButton = document.getElementById('generate-internal-link-button');
-            const fetchMultiRssButton = document.getElementById('fetch-multi-rss-button');
+        window.selectTopicForSinglePosting = function(topic) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = topic;
+            const decodedTopic = textarea.value;
             
-            if (saveSettingsButton) saveSettingsButton.addEventListener('click', handleSaveSettings);
-            if (googleLoginButton) {
-                googleLoginButton.addEventListener('click', () => {
-                    if (!window.google || !window.google.accounts) {
-                        showStatusMessage('Google API가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.', 'error');
-                        return;
-                    }
-                    if (tokenClient) {
-                        tokenClient.requestAccessToken();
-                    } else {
-                        showStatusMessage('Google 로그인을 초기화하는 중입니다. 잠시 후 다시 시도해주세요.', 'info');
-                        initializeGsi();
-                        setTimeout(() => {
-                            if (tokenClient) {
-                                tokenClient.requestAccessToken();
-                            }
-                        }, 1000);
-                    }
-                });
+            const postTopicInput = document.getElementById('post-topic-input');
+            if (postTopicInput) {
+                postTopicInput.value = decodedTopic;
             }
-            if (logoutButtonSelection) logoutButtonSelection.addEventListener('click', handleLogout);
-            if (logoutButtonMain) logoutButtonMain.addEventListener('click', handleLogout);
-            if (changeBlogBtn) changeBlogBtn.addEventListener('click', showBlogSelectionModal);
-            if (generateTopicsButton) generateTopicsButton.addEventListener('click', handleGenerateTopics);
-            if (selectAllTopicsButton) selectAllTopicsButton.addEventListener('click', handleSelectAllTopics);
-            if (deselectAllTopicsButton) deselectAllTopicsButton.addEventListener('click', handleDeselectAllTopics);
-            if (startBulkScheduleButton) startBulkScheduleButton.addEventListener('click', handleBulkSchedule);
-            if (previewScheduleButton) previewScheduleButton.addEventListener('click', handlePreviewSchedule);
-            if (addKeywordButton) addKeywordButton.addEventListener('click', addKeywordInput);
-            if (aiPublishButton) aiPublishButton.addEventListener('click', handleAIPublishPost);
-            if (saveInstructionsButton) saveInstructionsButton.addEventListener('click', handleSaveInstructions);
-            if (manualPublishButton) manualPublishButton.addEventListener('click', handleManualPublishPost);
-            if (manualPreviewButton) manualPreviewButton.addEventListener('click', showManualPreview);
-            if (manualCodeViewButton) manualCodeViewButton.addEventListener('click', showManualCodeView);
-            if (manualResetButton) manualResetButton.addEventListener('click', handleManualReset);
-            if (stopButton) stopButton.addEventListener('click', handleStopProcess);
-            if (resumeButton) resumeButton.addEventListener('click', handleResumeProcess);
-            if (pauseResumeBtn) pauseResumeBtn.addEventListener('click', handlePauseResume);
-            if (clearQueueBtn) clearQueueBtn.addEventListener('click', handleClearQueue);
-            if (tabs) tabs.addEventListener('click', handleTabClick);
-            if (fetchRssButton) fetchRssButton.addEventListener('click', handleFetchRss);
-            if (generateInternalLinkButton) generateInternalLinkButton.addEventListener('click', handleGenerateInternalLink);
-            if (fetchMultiRssButton) fetchMultiRssButton.addEventListener('click', handleFetchMultiRss);
-            
-            // Google Search 체크박스 이벤트
-            const useGoogleSearchSingle = document.getElementById('use-google-search-single');
-            const useGoogleSearchBulk = document.getElementById('use-google-search-bulk');
-            const useGoogleSearchInternal = document.getElementById('use-google-search-internal');
-            
-            if (useGoogleSearchSingle) {
-                useGoogleSearchSingle.addEventListener('change', (e) => {
-                    const singleSearchResultPreview = document.getElementById('single-search-result-preview');
-                    const searchSourcesContainer = document.getElementById('search-sources-container');
-                    if (e.target.checked) {
-                        if (singleSearchResultPreview) singleSearchResultPreview.classList.remove('hidden');
-                        updateSearchStatus('active', '준비');
-                    } else {
-                        if (singleSearchResultPreview) {
-                            singleSearchResultPreview.classList.add('hidden');
-                            singleSearchResultPreview.innerHTML = '';
-                        }
-                        if (searchSourcesContainer) {
-                            searchSourcesContainer.innerHTML = '';
-                            searchSourcesContainer.classList.add('hidden');
-                        }
-                        updateSearchStatus('inactive', '끔');
-                    }
-                });
+            handleTabClick({ target: document.querySelector('[data-tab="ai-single-mode"]') });
+            const postingView = document.getElementById('posting-view');
+            if (postingView) {
+                postingView.scrollTop = 0;
             }
-            
-            if (useGoogleSearchBulk) {
-                useGoogleSearchBulk.addEventListener('change', (e) => {
-                    updateSearchQuotaDisplay();
-                    const bulkSearchInfo = document.getElementById('bulk-search-info');
-                    const bulkSearchQuotaWarning = document.getElementById('bulk-search-quota-warning');
-                    if (e.target.checked) {
-                        if (bulkSearchInfo) bulkSearchInfo.classList.remove('hidden');
-                        updateSearchStatus('active', '준비');
-                    } else {
-                        if (bulkSearchInfo) bulkSearchInfo.classList.add('hidden');
-                        if (bulkSearchQuotaWarning) bulkSearchQuotaWarning.classList.add('hidden');
-                        updateSearchStatus('inactive', '끔');
-                    }
-                });
-            }
-            
-            if (useGoogleSearchInternal) {
-                useGoogleSearchInternal.addEventListener('change', (e) => {
-                    const internalSearchInfo = document.getElementById('internal-search-info');
-                    if (e.target.checked && internalSearchInfo) {
-                        updateSearchStatus('active', '준비');
-                    } else {
-                        updateSearchStatus('inactive', '끔');
-                    }
-                });
-            }
-            
-            // 퍼머링크 입력 이벤트 리스너
-            const aiPermalinkInput = document.getElementById('ai-permalink-input');
-            const aiPermalinkPreview = document.getElementById('ai-permalink-preview');
-            const manualPermalinkInput = document.getElementById('manual-permalink-input');
-            const manualPermalinkPreview = document.getElementById('manual-permalink-preview');
-            
-            if (aiPermalinkInput) {
-                aiPermalinkInput.addEventListener('input', () => {
-                    updatePermalinkPreview(aiPermalinkInput, aiPermalinkPreview);
-                });
-            }
-            
-            if (manualPermalinkInput) {
-                manualPermalinkInput.addEventListener('input', () => {
-                    updatePermalinkPreview(manualPermalinkInput, manualPermalinkPreview);
-                });
-            }
-            
-            const autoRefreshToggle = document.getElementById('auto-refresh-toggle');
-            if (autoRefreshToggle) {
-                autoRefreshToggle.addEventListener('change', handleAutoRefreshToggle);
-            }
-            
-            const manualRefreshBtn = document.getElementById('manual-refresh-btn');
-            if (manualRefreshBtn) {
-                manualRefreshBtn.addEventListener('click', () => extendSession(false));
-            }
-            
-            const bulkStartDateInput = document.getElementById('bulk-start-date-input');
-            if (bulkStartDateInput) {
-                bulkStartDateInput.addEventListener('change', updateBulkDateInfo);
-            }
-            
-            const scheduleTimesInput = document.getElementById('schedule-times-input');
-            const scheduleDaysInput = document.getElementById('schedule-days-input');
-            
-            if (scheduleTimesInput) {
-                scheduleTimesInput.addEventListener('input', () => {
-                    validateScheduleSettings();
-                    updateBulkDateInfo();
-                });
-            }
-            
-            if (scheduleDaysInput) {
-                scheduleDaysInput.addEventListener('input', () => {
-                    validateScheduleSettings();
-                    updateBulkDateInfo();
-                });
-            }
-            
-            document.addEventListener('change', (e) => {
-                if (e.target.classList.contains('topic-checkbox')) {
-                    validateScheduleSettings();
-                    updateBulkDateInfo();
-                    updateSearchQuotaDisplay();
-                }
-            });
-
-            document.querySelectorAll('[data-toggle-for]').forEach(button => {
-                button.addEventListener('click', () => {
-                    const inputId = button.dataset.toggleFor;
-                    const input = document.getElementById(inputId);
-                    const icon = button.querySelector('i');
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        icon.setAttribute('data-lucide', 'eye-off');
-                    } else {
-                        input.type = 'password';
-                        icon.setAttribute('data-lucide', 'eye');
-                    }
-                    lucide.createIcons();
-                });
-            });
-            
-            document.addEventListener('visibilitychange', handleVisibilityChange);
         }
-        
+
         // 블로그 선택 모달 관련 함수들
         async function showBlogSelectionModal() {
             if (isProcessRunning) {
@@ -3836,7 +3800,7 @@ URL: ${item.link}
                 }
             }
         }
-        
+
         function renderBlogModalList(blogs) {
             const blogModalList = document.getElementById('blog-modal-list');
             if (!blogModalList) return;
@@ -3856,7 +3820,7 @@ URL: ${item.link}
                 `;
             }).join('');
         }
-        
+
         window.selectBlogFromModal = function(blogId, blogName, blogUrl) {
             if (blogId === selectedBlogId) {
                 closeBlogSelectionModal();
@@ -3886,18 +3850,6 @@ URL: ${item.link}
             scheduledPostTitles.clear();
             scheduledPostTimes.clear();
             
-            const aiPermalinkInput = document.getElementById('ai-permalink-input');
-            const aiPermalinkPreview = document.getElementById('ai-permalink-preview');
-            const manualPermalinkInput = document.getElementById('manual-permalink-input');
-            const manualPermalinkPreview = document.getElementById('manual-permalink-preview');
-            
-            if (aiPermalinkInput && aiPermalinkInput.value) {
-                updatePermalinkPreview(aiPermalinkInput, aiPermalinkPreview);
-            }
-            if (manualPermalinkInput && manualPermalinkInput.value) {
-                updatePermalinkPreview(manualPermalinkInput, manualPermalinkPreview);
-            }
-            
             closeBlogSelectionModal();
             showStatusMessage(`"${blogName}" 블로그로 변경되었습니다.`, 'success');
             
@@ -3906,14 +3858,14 @@ URL: ${item.link}
                 fetchScheduledPosts();
             }
         }
-        
+
         window.closeBlogSelectionModal = function() {
             const blogSelectionModal = document.getElementById('blog-selection-modal');
             if (blogSelectionModal) {
                 blogSelectionModal.classList.remove('active');
             }
         }
-        
+
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal-backdrop')) {
                 if (e.target.closest('#blog-selection-modal')) {
@@ -3923,7 +3875,7 @@ URL: ${item.link}
                 }
             }
         });
-        
+
         // 예약 일정 미리보기 함수들
         async function handlePreviewSchedule() {
             const topicIdeasList = document.getElementById('topic-ideas-list');
@@ -3967,7 +3919,7 @@ URL: ${item.link}
                 schedulePreviewContainer.classList.remove('hidden');
             }
         }
-        
+
         async function generateSchedulePreviewSmart(topics, times, days, startDateStr) {
             const schedulePreview = document.getElementById('schedule-preview');
             if (!schedulePreview) return;
@@ -4069,7 +4021,7 @@ URL: ${item.link}
             
             schedulePreview.innerHTML = html;
         }
-        
+
         // 실시간 시계 함수
         function startRealtimeClock() {
             if (realtimeClockInterval) {
@@ -4097,7 +4049,7 @@ URL: ${item.link}
             updateClock();
             realtimeClockInterval = setInterval(updateClock, 1000);
         }
-        
+
         // 다음 포스팅 시간 표시
         function updateNextPostingTime() {
             const nextPostingTimeEl = document.getElementById('next-posting-time');
@@ -4143,7 +4095,7 @@ URL: ${item.link}
                 }
             }
         }
-        
+
         // 큐 관리 함수들
         function updateQueueStatus() {
             const queueStatus = document.getElementById('queue-status');
@@ -4172,7 +4124,7 @@ URL: ${item.link}
                 }
             }
         }
-        
+
         function handlePauseResume() {
             const pauseResumeBtn = document.getElementById('pause-resume-btn');
             const currentStatusEl = document.getElementById('current-status');
@@ -4209,7 +4161,7 @@ URL: ${item.link}
             updateQueueStatus();
             lucide.createIcons();
         }
-        
+
         function handleClearQueue() {
             if (bulkScheduleQueue.length === 0) {
                 showStatusMessage('대기 중인 작업이 없습니다', 'info');
@@ -4225,7 +4177,7 @@ URL: ${item.link}
                 showStatusMessage(`${clearedCount}개의 작업이 취소되었습니다`, 'info');
             }
         }
-        
+
         // 작업 중지/재개 함수들
         function handleStopProcess() {
             if (!confirm('진행 중인 작업을 완전히 중지하시겠습니까?\n(재개하려면 처음부터 다시 시작해야 합니다)')) {
@@ -4275,7 +4227,7 @@ URL: ${item.link}
             if (stopButton) stopButton.classList.add('hidden');
             if (resumeButton) resumeButton.classList.add('hidden');
         }
-        
+
         function handleResumeProcess() {
             if (pausedQueue.length === 0 && bulkScheduleQueue.length === 0) {
                 showStatusMessage('재개할 작업이 없습니다', 'info');
@@ -4310,7 +4262,7 @@ URL: ${item.link}
             updateQueueStatus();
             processBulkScheduleQueue();
         }
-        
+
         // 토큰 관리 함수들
         function updateAutoRefreshStatus() {
             const autoRefreshStatus = document.getElementById('auto-refresh-status');
@@ -4321,7 +4273,7 @@ URL: ${item.link}
             
             updateTokenExplanation();
         }
-        
+
         function updateTokenExplanation() {
             const tokenExplanation = document.getElementById('token-explanation');
             if (!tokenExplanation) return;
@@ -4332,7 +4284,7 @@ URL: ${item.link}
                 tokenExplanation.innerHTML = '🔴 <strong>자동 연장 꺼짐</strong>: 세션 만료 5분 전에 알림이 표시됩니다. "연장" 버튼으로 수동 연장 가능.';
             }
         }
-        
+
         function startTokenCountdown() {
             const tokenStatusBar = document.getElementById('token-status-bar');
             if (tokenCountdownInterval) {
@@ -4354,7 +4306,7 @@ URL: ${item.link}
                 setupAutoRefresh();
             }
         }
-        
+
         function updateTokenDisplay() {
             if (!tokenExpiryTime) return;
             
@@ -4410,7 +4362,7 @@ URL: ${item.link}
                 }
             }
         }
-        
+
         function setupTokenWarning() {
             if (tokenWarningTimer) {
                 clearTimeout(tokenWarningTimer);
@@ -4426,14 +4378,14 @@ URL: ${item.link}
                 }, timeUntilWarning);
             }
         }
-        
+
         function setupAutoRefresh() {
             if (tokenRefreshTimer) {
                 clearTimeout(tokenRefreshTimer);
                 tokenRefreshTimer = null;
             }
         }
-        
+
         function handleAutoRefreshToggle() {
             const autoRefreshToggle = document.getElementById('auto-refresh-toggle');
             if (!autoRefreshToggle) return;
@@ -4449,7 +4401,7 @@ URL: ${item.link}
                 showStatusMessage('자동 연장이 비활성화되었습니다. 세션 만료 전 수동으로 연장해주세요.', 'info');
             }
         }
-        
+
         function extendSession(isAuto = false) {
             if (!tokenClient) {
                 console.error('토큰 클라이언트가 초기화되지 않았습니다.');
@@ -4488,7 +4440,7 @@ URL: ${item.link}
                 showStatusMessage('세션 연장에 실패했습니다. 다시 로그인해주세요.', 'error');
             }
         }
-        
+
         function showTokenWarningModal() {
             const tokenExtendModal = document.getElementById('token-extend-modal');
             const modalTimeRemaining = document.getElementById('modal-time-remaining');
@@ -4517,23 +4469,23 @@ URL: ${item.link}
                 }
             }, 1000);
         }
-        
+
         window.closeTokenModal = function() {
             const tokenExtendModal = document.getElementById('token-extend-modal');
             if (tokenExtendModal) {
                 tokenExtendModal.classList.add('hidden');
             }
         }
-        
+
         window.extendSession = extendSession;
-        
+
         function showTokenExpiredAlert() {
             showStatusMessage('세션이 만료되었습니다. 다시 로그인해주세요.', 'error');
             setTimeout(() => {
                 handleLogout();
             }, 2000);
         }
-        
+
         function handleVisibilityChange() {
             if (!document.hidden && accessToken && tokenExpiryTime) {
                 const remaining = tokenExpiryTime - Date.now();
@@ -4642,7 +4594,7 @@ URL: ${item.link}
                 }, 100);
             }
         }
-        
+
         function initializeGsi() {
             if (!CLIENT_ID) {
                 console.error('CLIENT_ID가 설정되지 않았습니다.');
@@ -4667,7 +4619,7 @@ URL: ${item.link}
                 showStatusMessage('Google 로그인 초기화 실패. 클라이언트 ID를 확인해주세요.', 'error');
             }
         }
-        
+
         function handleTokenResponse(response) {
             isRefreshing = false;
             
@@ -4705,7 +4657,7 @@ URL: ${item.link}
             
             updateSearchQuotaDisplay();
         }
-        
+
         function handleLogout() {
             if (tokenCountdownInterval) {
                 clearInterval(tokenCountdownInterval);
@@ -4863,7 +4815,7 @@ URL: ${item.link}
             handleTabClick({ target: document.querySelector('[data-tab="internal-link-mode"]') });
             updateSearchQuotaDisplay();
         }
-        
+
         function handleSaveInstructions() {
             const writingInstructionsInput = document.getElementById('writing-instructions-input');
             const newInstructions = writingInstructionsInput?.value.trim();
@@ -4911,65 +4863,6 @@ URL: ${item.link}
             }
             
             return processedLabels;
-        }
-
-        // Pollinations.ai 이미지 생성 (한글 프롬프트를 영어로 번역)
-        async function translateToEnglish(koreanText) {
-            try {
-                const translatePrompt = `Translate the following Korean text to English for image generation. Provide only the English translation without any explanation:
-                "${koreanText}"`;
-                
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
-                const payload = { contents: [{ parts: [{ text: translatePrompt }] }] };
-                
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Translation failed');
-                }
-                
-                const result = await response.json();
-                const englishText = result.candidates[0].content.parts[0].text.trim();
-                console.log(`번역: "${koreanText}" → "${englishText}"`);
-                return englishText;
-            } catch (error) {
-                console.error('번역 실패:', error);
-                return 'blog post image';
-            }
-        }
-
-        async function generatePollinationsImage(prompt) {
-            try {
-                const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(prompt);
-                let englishPrompt = prompt;
-                
-                if (hasKorean) {
-                    addLog('🔤 한글 프롬프트를 영어로 번역 중...', 'info');
-                    englishPrompt = await translateToEnglish(prompt);
-                }
-                
-                const enhancedPrompt = `${englishPrompt}, professional photography, high quality, detailed, 8k resolution, beautiful lighting, vibrant colors`;
-                const encodedPrompt = encodeURIComponent(enhancedPrompt);
-                
-                const seed = Date.now() + Math.floor(Math.random() * 10000);
-                
-                const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1200&height=800&nologo=true&seed=${seed}`;
-                
-                console.log('flux 이미지 URL:', imageUrl);
-                addLog('✅ 이미지 생성 완료', 'success');
-                
-                return imageUrl;
-            } catch (error) {
-                console.error('flux 이미지 생성 실패:', error);
-                addLog('⚠️ 이미지 생성 실패, 기본 이미지 사용', 'warn');
-                
-                const fallbackSeed = Date.now();
-                return `https://image.pollinations.ai/prompt/beautiful%20blog%20image?width=1200&height=800&nologo=true&seed=${fallbackSeed}`;
-            }
         }
 
         // Gemini API 호출
@@ -5057,186 +4950,7 @@ URL: ${item.link}
             return rawText.trim();
         }
 
-        // AI 주제 생성 & 대량 예약
-        function addKeywordInput() {
-            const keywordInputsContainer = document.getElementById('keyword-inputs-container');
-            if (!keywordInputsContainer) return;
-            
-            const newRow = document.createElement('div');
-            newRow.className = 'flex items-center space-x-2';
-
-            const newInput = document.createElement('input');
-            newInput.type = 'text';
-            newInput.name = 'core-keywords';
-            newInput.className = 'block w-full px-3 py-2 border rounded-md';
-            newInput.placeholder = '예: 된장찌개';
-
-            const removeButton = document.createElement('button');
-            removeButton.type = 'button';
-            removeButton.className = 'text-red-500 hover:text-red-700 p-1';
-            removeButton.innerHTML = '<i data-lucide="minus-circle" class="w-5 h-5"></i>';
-            removeButton.onclick = () => {
-                newRow.remove();
-            };
-
-            newRow.appendChild(newInput);
-            newRow.appendChild(removeButton);
-            keywordInputsContainer.appendChild(newRow);
-            lucide.createIcons();
-        }
-
-        async function handleGenerateTopics() {
-            const keywordInputsContainer = document.getElementById('keyword-inputs-container');
-            const topicIdeasLoader = document.getElementById('topic-ideas-loader');
-            const topicSelectionContainer = document.getElementById('topic-selection-container');
-            const topicIdeasList = document.getElementById('topic-ideas-list');
-            const bulkScheduleConfig = document.getElementById('bulk-schedule-config');
-            const generateTopicsButton = document.getElementById('generate-topics-button');
-            const progressContainer = document.getElementById('progress-container');
-            
-            if (!keywordInputsContainer) return;
-            
-            const keywordInputs = document.querySelectorAll('#keyword-inputs-container input[name="core-keywords"]');
-            const keywords = Array.from(keywordInputs).map(input => input.value.trim()).filter(Boolean);
-
-            if (keywords.length === 0) {
-                showStatusMessage('하나 이상의 핵심 키워드를 입력해주세요.', 'error');
-                return;
-            }
-            
-            if (topicIdeasLoader) topicIdeasLoader.classList.remove('hidden');
-            if (topicSelectionContainer) topicSelectionContainer.classList.add('hidden');
-            if (topicIdeasList) topicIdeasList.innerHTML = '';
-            isProcessRunning = true;
-            if (generateTopicsButton) generateTopicsButton.disabled = true;
-            initLog();
-            if (progressContainer) progressContainer.classList.remove('hidden');
-
-            try {
-                addLog(`${keywords.length}개의 키워드에 대한 주제 생성을 시작합니다.`);
-                let allTopics = [];
-                for (let i = 0; i < keywords.length; i++) {
-                    const keyword = keywords[i];
-                    if (!isProcessRunning) throw new Error('작업 중지됨');
-                    updateProgress((i / keywords.length) * 100, `"${keyword}" 키워드로 주제 생성 중...`);
-                    const prompt = `당신은 SEO 전문가이자 콘텐츠 전략가입니다. 핵심 키워드 "${keyword}"(을)를 바탕으로, 구글 검색에 최적화되고 사용자의 흥미를 끌 만한 블로그 글 주제 10~15가지를 생성해주세요. 
-
-중요 규칙:
-- "추천", "1등", "1위", "최고", "베스트", "TOP", "BEST" 등 약관 위반 단어 절대 사용 금지
-- 각 주제는 이전 주제와 중복되지 않아야 하며 년도 표기 한다면 2025년 최신 표기
-- 구체적이고 매력적이어야 합니다
-- 객관적이고 사실적인 표현만 사용
-- 라벨 150자 제한 , 1개 라벨 8자를 넘지 않는다. , 최적화 단어 6개 라벨 
-**매우 중요: 서론이나 번호 없이, 오직 각 주제를 줄바꿈으로 구분한 목록만 제공해주세요.**`;
-                    const topicsText = await geminiFetch('gemini-2.5-flash-preview-05-20', prompt);
-                    const topics = topicsText.split('\n').filter(t => {
-                        const trimmed = t.trim();
-                        if (trimmed === '') return false;
-                        if (trimmed.includes('다음은') || trimmed.includes('주제 목록입니다') || trimmed.includes('생성해')) {
-                            return false;
-                        }
-                        const prohibitedWords = ['추천', '1등', '1위', '최고', '베스트', 'BEST', 'TOP'];
-                        for (const word of prohibitedWords) {
-                            if (trimmed.includes(word)) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    }).map(t => t.replace(/^\d+\.\s*/, '').trim());
-                    allTopics.push(...topics);
-                }
-
-                const uniqueTopics = [...new Set(allTopics)];
-                
-                renderTopicIdeas(uniqueTopics);
-                if (topicSelectionContainer) topicSelectionContainer.classList.remove('hidden');
-                if (bulkScheduleConfig) bulkScheduleConfig.classList.remove('hidden');
-                updateProgress(100, `총 ${uniqueTopics.length}개의 고유한 주제를 생성했습니다.`);
-
-            } catch (error) {
-                showStatusMessage(`주제 생성 실패: ${error.message}`, 'error');
-                addLog(`주제 생성 실패: ${error.message}`, 'error');
-            } finally {
-                if (topicIdeasLoader) topicIdeasLoader.classList.add('hidden');
-                isProcessRunning = false;
-                if (generateTopicsButton) generateTopicsButton.disabled = false;
-            }
-        }
-
-        function renderTopicIdeas(topics) {
-            const topicIdeasList = document.getElementById('topic-ideas-list');
-            const totalTopicCountEl = document.getElementById('total-topic-count');
-            
-            if (totalTopicCountEl) {
-                totalTopicCountEl.textContent = topics.length;
-            }
-            
-            if (!topicIdeasList) return;
-            
-            topicIdeasList.innerHTML = topics.map((topic, index) => `
-                <li class="topic-item p-2 bg-gray-50 dark:bg-gray-700 rounded-md flex items-center justify-between">
-                    <div class="flex items-center flex-grow mr-2">
-                        <input type="checkbox" id="topic-${index}" value="${topic.replace(/"/g, '&quot;')}" class="topic-checkbox mr-3 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <label for="topic-${index}" class="text-sm w-full cursor-pointer">${topic}</label>
-                    </div>
-                    <button onclick="selectTopicForSinglePosting('${topic.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" class="p-1 text-gray-500 hover:text-blue-600 flex-shrink-0" title="이 주제로 단일 포스팅하기">
-                        <i data-lucide="send" class="w-4 h-4"></i>
-                    </button>
-                </li>
-            `).join('');
-            
-            topicIdeasList.querySelectorAll('.topic-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const listItem = this.closest('li');
-                    if (this.checked) {
-                        listItem.classList.add('selected');
-                    } else {
-                        listItem.classList.remove('selected');
-                    }
-                    updateSelectedTopicCount();
-                    validateScheduleSettings();
-                    updateBulkDateInfo();
-                    updateSearchQuotaDisplay();
-                });
-            });
-            
-            updateSelectedTopicCount();
-            lucide.createIcons();
-        }
-
-        window.selectTopicForSinglePosting = function(topic) {
-            const textarea = document.createElement('textarea');
-            textarea.innerHTML = topic;
-            const decodedTopic = textarea.value;
-            
-            const postTopicInput = document.getElementById('post-topic-input');
-            if (postTopicInput) {
-                postTopicInput.value = decodedTopic;
-            }
-            handleTabClick({ target: document.querySelector('[data-tab="ai-single-mode"]') });
-            const postingView = document.getElementById('posting-view');
-            if (postingView) {
-                postingView.scrollTop = 0;
-            }
-        }
-        
-        function updateSelectedTopicCount() {
-            const topicIdeasList = document.getElementById('topic-ideas-list');
-            const selectedTopicCountEl = document.getElementById('selected-topic-count');
-            
-            if (!topicIdeasList || !selectedTopicCountEl) return;
-            
-            const selectedCheckboxes = topicIdeasList.querySelectorAll('input[type="checkbox"]:checked');
-            const selectedCount = selectedCheckboxes.length;
-            selectedTopicCountEl.textContent = selectedCount;
-            
-            console.log(`✅ 선택된 주제 수: ${selectedCount}`);
-            selectedCheckboxes.forEach((cb, index) => {
-                console.log(`  ${index + 1}. ${cb.value}`);
-            });
-        }
-
-        // 예약 포스트 관리
+        // 예약된 글 목록 가져오기
         async function fetchScheduledPosts() {
             const scheduledLoader = document.getElementById('scheduled-loader');
             const scheduledListUl = document.getElementById('scheduled-list-ul');
@@ -5258,7 +4972,7 @@ URL: ${item.link}
             }
         }
 
-        function renderScheduledPosts(posts) {
+           function renderScheduledPosts(posts) {
             const titleEl = document.getElementById('scheduled-list-title');
             const scheduledListUl = document.getElementById('scheduled-list-ul');
             
@@ -5303,7 +5017,7 @@ URL: ${item.link}
                 }).join('');
             }
         }
-        
+
         window.handleCancelSchedule = async function(postId) {
             if (!confirm('이 글의 예약을 취소하고 초안으로 되돌리시겠습니까?')) return;
             try {
@@ -5315,7 +5029,7 @@ URL: ${item.link}
             }
         }
 
-        // 포스팅 로직 (단일, 수동)        
+        // 수동 포스팅 함수들
         function showManualPreview() {
             const manualContentInput = document.getElementById('manual-content-input');
             const manualContentPreview = document.getElementById('manual-content-preview');
@@ -5350,15 +5064,11 @@ URL: ${item.link}
             const manualContentInput = document.getElementById('manual-content-input');
             const manualLabelsInput = document.getElementById('manual-labels-input');
             const manualPublishTimeInput = document.getElementById('manual-publish-time-input');
-            const manualPermalinkInput = document.getElementById('manual-permalink-input');
-            const manualPermalinkPreview = document.getElementById('manual-permalink-preview');
             
             if (manualTitleInput) manualTitleInput.value = '';
             if (manualContentInput) manualContentInput.value = '';
             if (manualLabelsInput) manualLabelsInput.value = '';
             if (manualPublishTimeInput) manualPublishTimeInput.value = '';
-            if (manualPermalinkInput) manualPermalinkInput.value = '';
-            if (manualPermalinkPreview) manualPermalinkPreview.classList.add('hidden');
             showManualCodeView();
         }
 
@@ -5367,14 +5077,12 @@ URL: ${item.link}
             const manualContentInput = document.getElementById('manual-content-input');
             const manualLabelsInput = document.getElementById('manual-labels-input');
             const manualPublishTimeInput = document.getElementById('manual-publish-time-input');
-            const manualPermalinkInput = document.getElementById('manual-permalink-input');
             const progressContainer = document.getElementById('progress-container');
             
             const title = manualTitleInput?.value.trim();
             const content = manualContentInput?.value.trim();
             const labelsText = manualLabelsInput?.value.trim();
             const publishTime = manualPublishTimeInput?.value;
-            const permalink = manualPermalinkInput?.value.trim();
 
             if (!title || !content) {
                 showStatusMessage('제목과 본문을 모두 입력해주세요.', 'error');
@@ -5394,14 +5102,6 @@ URL: ${item.link}
                 labels: processedLabels
             };
             
-            if (permalink) {
-                const formattedPermalink = formatPermalink(permalink);
-                if (formattedPermalink) {
-                    postData.url = `${selectedBlogUrl}${formattedPermalink}.html`;
-                    addLog(`🔗 퍼머링크 설정: ${formattedPermalink}`, 'info');
-                }
-            }
-            
             initLog();
             if (progressContainer) progressContainer.classList.remove('hidden');
             addLog(`📝 수동 포스팅 시작: "${title}"`, 'info');
@@ -5414,9 +5114,9 @@ URL: ${item.link}
             await publishPost(postData, publishTime);
             if (progressContainer) progressContainer.classList.add('hidden');
         }
-        
-        // 핵심: 대량 작업 시 각 포스팅마다 Google Search API 호출
-        async function createAIPost(topic, instructions, shouldGenerateImage, customPermalink = null, useGoogleSearch = false) {
+
+        // AI 포스팅 함수
+        async function createAIPost(topic, instructions, shouldGenerateImage, useGoogleSearch = false) {
             const steps = shouldGenerateImage ? 4 : 3;
             let currentStep = 0;
             
@@ -5487,7 +5187,7 @@ URL: ${item.link}
             }, 500);
             
             try {
-                const articleContent = await geminiFetch('gemini-2.5-flash-preview-05-20', articlePrompt);
+                const articleContent = await geminiFetch('gemini-2.5-flash', articlePrompt);
                 clearInterval(writingInterval);
                 
                 // 글자 수 계산
@@ -5576,7 +5276,7 @@ URL: ${item.link}
                 
                 주제: ${topic}`;
                 
-                const tagsText = await geminiFetch('gemini-2.5-flash-preview-05-20', tagsPrompt);
+                const tagsText = await geminiFetch('gemini-2.5-flash', tagsPrompt);
                 
                 let labels = tagsText.split(',').map(tag => tag.trim()).filter(Boolean);
                 
@@ -5608,15 +5308,6 @@ URL: ${item.link}
                 
                 const postData = { title: topic, content: finalContent, labels: processedLabels };
                 
-                // 퍼머링크 추가
-                if (customPermalink) {
-                    const formattedPermalink = formatPermalink(customPermalink);
-                    if (formattedPermalink) {
-                        postData.url = `${selectedBlogUrl}${formattedPermalink}.html`;
-                        addLog(`🔗 퍼머링크 설정: ${formattedPermalink}`, 'info');
-                    }
-                }
-                
                 return postData;
                 
             } catch (error) {
@@ -5631,8 +5322,6 @@ URL: ${item.link}
             const writingInstructionsInput = document.getElementById('writing-instructions-input');
             const generateImageCheckboxSingle = document.getElementById('generate-image-checkbox-single');
             const useGoogleSearchSingle = document.getElementById('use-google-search-single');
-            const aiPermalinkInput = document.getElementById('ai-permalink-input');
-            const aiPermalinkPreview = document.getElementById('ai-permalink-preview');
             const singleSearchResultPreview = document.getElementById('single-search-result-preview');
             const searchSourcesContainer = document.getElementById('search-sources-container');
             const progressContainer = document.getElementById('progress-container');
@@ -5645,7 +5334,6 @@ URL: ${item.link}
             const instructions = writingInstructionsInput?.value.trim();
             const shouldGenerateImage = generateImageCheckboxSingle?.checked;
             const useGoogleSearch = useGoogleSearchSingle?.checked;
-            const permalink = aiPermalinkInput?.value.trim();
 
             if (!topic) {
                 showStatusMessage('글 주제를 입력해주세요.', 'error');
@@ -5703,15 +5391,12 @@ URL: ${item.link}
                 addLog(`📋 주제: "${topic}"`, 'info');
                 addLog(`🖼️ 이미지 생성: ${shouldGenerateImage ? 'flux 사용' : '아니오'}`, 'info');
                 addLog(`🔍 Google 검색: ${useGoogleSearch ? '사용' : '사용 안 함'}`, 'info');
-                if (permalink) {
-                    addLog(`🔗 퍼머링크: ${formatPermalink(permalink)}`, 'info');
-                }
                 
                 if (currentStatusEl) {
                     currentStatusEl.textContent = 'AI 포스팅 프로세스 시작...';
                 }
                 
-                const postData = await createAIPost(topic, instructions, shouldGenerateImage, permalink, useGoogleSearch);
+                const postData = await createAIPost(topic, instructions, shouldGenerateImage, useGoogleSearch);
                 
                 addLog('📤 블로그에 발행 중...', 'info');
                 updateProgress(95, '블로그에 글을 발행하는 중...');
@@ -5730,8 +5415,6 @@ URL: ${item.link}
                     currentStatusEl.textContent = '포스팅 완료!';
                 }
                 if (postTopicInput) postTopicInput.value = '';
-                if (aiPermalinkInput) aiPermalinkInput.value = '';
-                if (aiPermalinkPreview) aiPermalinkPreview.classList.add('hidden');
                 if (singleSearchResultPreview) {
                     singleSearchResultPreview.innerHTML = '';
                     singleSearchResultPreview.classList.add('hidden');
@@ -5767,8 +5450,8 @@ URL: ${item.link}
                 setPublishButtonState(false, 'single');
             }
         }
-        
-          // 스마트 대량 예약 로직
+
+        // 수정된 대량 예약 함수
         async function handleBulkSchedule() {
             const topicIdeasList = document.getElementById('topic-ideas-list');
             const scheduleTimesInput = document.getElementById('schedule-times-input');
@@ -5782,7 +5465,14 @@ URL: ${item.link}
             if (!topicIdeasList) return;
             
             const selectedCheckboxes = Array.from(topicIdeasList.querySelectorAll('input[type="checkbox"]:checked'));
-            let selectedTopics = selectedCheckboxes.map(cb => cb.value);
+            
+            // 수정된 부분: 각 체크된 항목의 topic-title-input 값 사용
+            let selectedTopics = selectedCheckboxes.map(cb => {
+                const li = cb.closest('li');
+                const titleInput = li ? li.querySelector('.topic-title-input') : null;
+                const manualTitle = titleInput ? titleInput.value.trim() : '';
+                return manualTitle || cb.value;
+            });
             
             const timesText = scheduleTimesInput?.value.trim() || '';
             const daysValue = scheduleDaysInput?.value.trim() || '';
@@ -5959,7 +5649,7 @@ ${useGoogleSearch ? '🔍 각 포스팅마다 Google Search API로 최신 자료
             processBulkScheduleQueue();
         }
 
-        // 대량 작업 큐 처리 (각 포스팅마다 API 호출)
+        // 대량 작업 큐 처리
         async function processBulkScheduleQueue() {
             if (!isProcessRunning || bulkScheduleQueue.length === 0) {
                 if (isProcessRunning && completedBulkJobs === totalBulkJobs) {
@@ -6006,14 +5696,12 @@ ${useGoogleSearch ? '🔍 각 포스팅마다 Google Search API로 최신 자료
             
             addLog(`📅 예약 시간: ${publishTimeStr}`, 'info');
             
-            // 각 포스팅마다 Google Search 사용 여부 표시
             if (job.useGoogleSearch) {
                 addLog(`🔍 이 포스팅은 Google 검색을 사용합니다`, 'info');
             }
 
             try {
-                // createAIPost에서 각 포스팅마다 API 호출
-                const postData = await createAIPost(job.topic, WRITING_INSTRUCTIONS, job.generateImage, null, job.useGoogleSearch);
+                const postData = await createAIPost(job.topic, WRITING_INSTRUCTIONS, job.generateImage, job.useGoogleSearch);
                 await publishPost(postData, job.publishDate.toISOString());
                 
                 scheduledPostTitles.add(job.topic.toLowerCase());
@@ -6088,6 +5776,7 @@ ${useGoogleSearch ? '🔍 각 포스팅마다 Google Search API로 최신 자료
             }
         }
 
+        // 포스트 발행
         async function publishPost(postData, publishTime) {
             const finalPostData = { ...postData };
             const isScheduled = !!publishTime;
@@ -6131,11 +5820,11 @@ ${useGoogleSearch ? '🔍 각 포스팅마다 Google Search API로 최신 자료
                     showStatusMessage(`발행 실패: ${error.message}`, 'error');
                 }
                 addLog(`❌ 발행 실패: ${error.message}`, 'error');
-                throw error; 
+                throw error;
             }
         }
-        
-        // UI/UX 함수
+
+        // UI/UX 함수들
         function setPublishButtonState(isLoading, mode) {
             const generateTopicsButton = document.getElementById('generate-topics-button');
             const startBulkScheduleButton = document.getElementById('start-bulk-schedule-button');
@@ -6166,7 +5855,7 @@ ${useGoogleSearch ? '🔍 각 포스팅마다 Google Search API로 최신 자료
                 if (singleButton) singleButton.disabled = false;
             }
         }
-        
+
         function showStatusMessage(message, type) {
             const statusMessageEl = document.getElementById('status-message');
             if (!statusMessageEl) return;
@@ -6263,7 +5952,7 @@ ${useGoogleSearch ? '🔍 각 포스팅마다 Google Search API로 최신 자료
                 addLog(`발행 실패: ${error.message}`, 'error');
             }
         }
-        
+
         function updateProgress(percentage, message) {
             const currentStatusEl = document.getElementById('current-status');
             const progressBar = document.getElementById('progress-bar');
@@ -6274,6 +5963,259 @@ ${useGoogleSearch ? '🔍 각 포스팅마다 Google Search API로 최신 자료
             }
             if (progressBar) progressBar.style.width = `${percentage}%`;
         }
+
+        // 이벤트 리스너 등록
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadSearchUsage();
+            setDefaultDates();
+            
+            // 설정 저장 버튼
+            const saveSettingsButton = document.getElementById('save-settings-button');
+            if (saveSettingsButton) {
+                saveSettingsButton.addEventListener('click', handleSaveSettings);
+            }
+            
+            // Google 로그인 버튼
+            const googleLoginButton = document.getElementById('google-login-button');
+            if (googleLoginButton) {
+                googleLoginButton.addEventListener('click', () => {
+                    if (tokenClient) {
+                        tokenClient.requestAccessToken();
+                    } else {
+                        showStatusMessage('Google 로그인이 아직 초기화되지 않았습니다. 잠시 후 다시 시도해주세요.', 'warn');
+                    }
+                });
+            }
+            
+            // 로그아웃 버튼들
+            const logoutButtons = document.querySelectorAll('[id^="logout-button"]');
+            logoutButtons.forEach(btn => {
+                btn.addEventListener('click', handleLogout);
+            });
+            
+            // 블로그 변경 버튼
+            const changeBlogBtn = document.getElementById('change-blog-btn');
+            if (changeBlogBtn) {
+                changeBlogBtn.addEventListener('click', showBlogSelectionModal);
+            }
+            
+            // 탭 전환
+            const tabs = document.getElementById('tabs');
+            if (tabs) {
+                tabs.addEventListener('click', handleTabClick);
+            }
+            
+            // RSS 가져오기 버튼
+            const fetchRssButton = document.getElementById('fetch-rss-button');
+            if (fetchRssButton) {
+                fetchRssButton.addEventListener('click', handleFetchRss);
+            }
+            
+            // 멀티 블로그 RSS 가져오기
+            const fetchMultiRssButton = document.getElementById('fetch-multi-rss-button');
+            if (fetchMultiRssButton) {
+                fetchMultiRssButton.addEventListener('click', handleFetchMultiRss);
+            }
+            
+            // 내부링크 포스팅 생성
+            const generateInternalLinkButton = document.getElementById('generate-internal-link-button');
+            if (generateInternalLinkButton) {
+                generateInternalLinkButton.addEventListener('click', handleGenerateInternalLink);
+            }
+            
+            // 주제 생성 버튼
+            const generateTopicsButton = document.getElementById('generate-topics-button');
+            if (generateTopicsButton) {
+                generateTopicsButton.addEventListener('click', handleGenerateTopics);
+            }
+            
+            // 전체 선택/해제
+            const selectAllTopicsButton = document.getElementById('select-all-topics-button');
+            if (selectAllTopicsButton) {
+                selectAllTopicsButton.addEventListener('click', handleSelectAllTopics);
+            }
+            
+            const deselectAllTopicsButton = document.getElementById('deselect-all-topics-button');
+            if (deselectAllTopicsButton) {
+                deselectAllTopicsButton.addEventListener('click', handleDeselectAllTopics);
+            }
+            
+            // 예약 설정 변경 감지
+            const scheduleTimesInput = document.getElementById('schedule-times-input');
+            const scheduleDaysInput = document.getElementById('schedule-days-input');
+            const bulkStartDateInput = document.getElementById('bulk-start-date-input');
+            
+            if (scheduleTimesInput) {
+                scheduleTimesInput.addEventListener('input', () => {
+                    validateScheduleSettings();
+                    updateBulkDateInfo();
+                });
+            }
+            
+            if (scheduleDaysInput) {
+                scheduleDaysInput.addEventListener('input', () => {
+                    validateScheduleSettings();
+                    updateBulkDateInfo();
+                });
+            }
+            
+            if (bulkStartDateInput) {
+                bulkStartDateInput.addEventListener('change', () => {
+                    validateScheduleSettings();
+                    updateBulkDateInfo();
+                });
+            }
+            
+            // Google Search 토글
+            const useGoogleSearchBulk = document.getElementById('use-google-search-bulk');
+            if (useGoogleSearchBulk) {
+                useGoogleSearchBulk.addEventListener('change', () => {
+                    const bulkSearchInfo = document.getElementById('bulk-search-info');
+                    if (bulkSearchInfo) {
+                        if (useGoogleSearchBulk.checked) {
+                            bulkSearchInfo.classList.remove('hidden');
+                        } else {
+                            bulkSearchInfo.classList.add('hidden');
+                        }
+                    }
+                    updateSearchQuotaDisplay();
+                });
+            }
+            
+            const useGoogleSearchSingle = document.getElementById('use-google-search-single');
+            if (useGoogleSearchSingle) {
+                useGoogleSearchSingle.addEventListener('change', () => {
+                    const singleSearchResultPreview = document.getElementById('single-search-result-preview');
+                    if (singleSearchResultPreview) {
+                        if (useGoogleSearchSingle.checked) {
+                            singleSearchResultPreview.classList.remove('hidden');
+                        } else {
+                            singleSearchResultPreview.classList.add('hidden');
+                        }
+                    }
+                });
+            }
+            
+            // 예약 미리보기
+            const previewScheduleButton = document.getElementById('preview-schedule-button');
+            if (previewScheduleButton) {
+                previewScheduleButton.addEventListener('click', handlePreviewSchedule);
+            }
+            
+            // 대량 예약 시작
+            const startBulkScheduleButton = document.getElementById('start-bulk-schedule-button');
+            if (startBulkScheduleButton) {
+                startBulkScheduleButton.addEventListener('click', handleBulkSchedule);
+            }
+            
+            // 단일 AI 포스팅
+            const aiPublishButton = document.getElementById('ai-publish-button');
+            if (aiPublishButton) {
+                aiPublishButton.addEventListener('click', handleAIPublishPost);
+            }
+            
+            // 글쓰기 지침 저장
+            const saveInstructionsButton = document.getElementById('save-instructions-button');
+            if (saveInstructionsButton) {
+                saveInstructionsButton.addEventListener('click', handleSaveInstructions);
+            }
+            
+            // 수동 포스팅
+            const manualPublishButton = document.getElementById('manual-publish-button');
+            if (manualPublishButton) {
+                manualPublishButton.addEventListener('click', handleManualPublishPost);
+            }
+            
+            const manualResetButton = document.getElementById('manual-reset-button');
+            if (manualResetButton) {
+                manualResetButton.addEventListener('click', handleManualReset);
+            }
+            
+            const manualPreviewButton = document.getElementById('manual-preview-button');
+            if (manualPreviewButton) {
+                manualPreviewButton.addEventListener('click', showManualPreview);
+            }
+            
+            const manualCodeViewButton = document.getElementById('manual-code-view-button');
+            if (manualCodeViewButton) {
+                manualCodeViewButton.addEventListener('click', showManualCodeView);
+            }
+            
+            // 작업 제어
+            const stopButton = document.getElementById('stop-button');
+            if (stopButton) {
+                stopButton.addEventListener('click', handleStopProcess);
+            }
+            
+            const resumeButton = document.getElementById('resume-button');
+            if (resumeButton) {
+                resumeButton.addEventListener('click', handleResumeProcess);
+            }
+            
+            const pauseResumeBtn = document.getElementById('pause-resume-btn');
+            if (pauseResumeBtn) {
+                pauseResumeBtn.addEventListener('click', handlePauseResume);
+            }
+            
+            const clearQueueBtn = document.getElementById('clear-queue-btn');
+            if (clearQueueBtn) {
+                clearQueueBtn.addEventListener('click', handleClearQueue);
+            }
+            
+            // 토큰 자동 갱신 토글
+            const autoRefreshToggle = document.getElementById('auto-refresh-toggle');
+            if (autoRefreshToggle) {
+                const savedAutoRefresh = localStorage.getItem('autoRefreshToken');
+                if (savedAutoRefresh === 'true') {
+                    autoRefreshToggle.checked = true;
+                    isAutoRefreshEnabled = true;
+                }
+                autoRefreshToggle.addEventListener('change', handleAutoRefreshToggle);
+                updateAutoRefreshStatus();
+            }
+            
+            // 수동 토큰 갱신 버튼
+            const manualRefreshBtn = document.getElementById('manual-refresh-btn');
+            if (manualRefreshBtn) {
+                manualRefreshBtn.addEventListener('click', () => extendSession(false));
+            }
+            
+            // 비밀번호 표시/숨김 토글
+            document.querySelectorAll('[data-toggle-for]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const inputId = button.getAttribute('data-toggle-for');
+                    const input = document.getElementById(inputId);
+                    if (input) {
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            button.querySelector('i').setAttribute('data-lucide', 'eye-off');
+                        } else {
+                            input.type = 'password';
+                            button.querySelector('i').setAttribute('data-lucide', 'eye');
+                        }
+                        lucide.createIcons();
+                    }
+                });
+            });
+            
+            // 페이지 가시성 변경 감지
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            
+            // 실시간 시계 시작
+            startRealtimeClock();
+            
+            // Lucide 아이콘 초기화
+            lucide.createIcons();
+            
+            // Google API 로드 대기
+            const checkGoogleApi = setInterval(() => {
+                if (window.google && window.google.accounts && CLIENT_ID) {
+                    clearInterval(checkGoogleApi);
+                    initializeGsi();
+                }
+            }, 100);
+        });
     </script>
 </body>
 </html>
